@@ -1000,7 +1000,6 @@ module Ltac2Std = struct
   and or_and_intro_pattern = Tac2types.or_and_intro_pattern
   type destruction_arg = Tac2types.destruction_arg
   type induction_clause = Tac2types.induction_clause
-  type assertion = Tac2types.assertion
   type repeat = Equality.multi
   type orientation = Tac2types.orientation
   type rewriting = Tac2types.rewriting
@@ -1023,7 +1022,15 @@ module Ltac2Std = struct
 
   let generalize = Tac2tactics.generalize
 
-  let assert_ = Tac2tactics.assert_
+  let assert_ ?as_pattern ?by c =
+    (* TODO: This is fishy. *)
+    let by =
+      match by with
+      | None -> None
+      | Some _ -> Some by
+    in
+    Tac2tactics.forward true by as_pattern c
+
   let enough ?as_pattern ?by c =
     Tac2tactics.forward false (Some by) as_pattern c
 

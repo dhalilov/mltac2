@@ -1165,7 +1165,6 @@ module Std : sig
   and or_and_intro_pattern = Tac2types.or_and_intro_pattern
   type destruction_arg = Tac2types.destruction_arg
   type induction_clause = Tac2types.induction_clause
-  type assertion = Tac2types.assertion
   type repeat = Equality.multi
   type orientation = Tac2types.orientation
   type rewriting = Tac2types.rewriting
@@ -1337,7 +1336,7 @@ module Std : sig
 
   (** {3 Controlling the proof flow} *)
 
-  val assert_ : assertion -> unit tactic
+  val assert_ : ?as_pattern:intro_pattern -> ?by:unit tactic -> constr -> unit tactic
   (** [assert_ assertion] adds a new hypothesis to the current subgoal and a new subgoal
       before it to prove the hypothesis.
 
