@@ -1002,7 +1002,6 @@ module Ltac2Std = struct
   type induction_clause = Tac2types.induction_clause
   type repeat = Equality.multi
   type rewriting = Tac2types.rewriting
-  type evar_flag = Tac2types.evars_flag
   type move_location = Id.t Logic.move_location
   type inversion_kind = Inv.inversion_kind
 

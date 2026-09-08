@@ -1167,13 +1167,12 @@ module Std : sig
   type induction_clause = Tac2types.induction_clause
   type repeat = Equality.multi
   type rewriting = Tac2types.rewriting
-  type evar_flag = Tac2types.evars_flag
   type move_location = Id.t Logic.move_location
   type inversion_kind = Inv.inversion_kind
 
   (** {3 Applying theorems} *)
 
-  val assumption : ?e:evar_flag -> unit -> unit tactic
+  val assumption : ?e:bool -> unit -> unit tactic
   (** [assumption ()] looks in the local context for a hypothesis whose type is
       convertible to the goal. If it is the case, the subgoal is proved. Otherwise,
       it fails.
@@ -1186,7 +1185,7 @@ module Std : sig
       @see <https://rocq-prover.org/doc/master/refman/proof-engine/tactics.html#rocq:tacn.assumption> Reference manual
    *)
 
-  val apply : ?e:evar_flag -> ?in_hyp_as:(ident * intro_pattern option) -> constr_with_bindings list -> unit tactic
+  val apply : ?e:bool -> ?in_hyp_as:(ident * intro_pattern option) -> constr_with_bindings list -> unit tactic
   (** [apply ?e ts ?in_hyp_as] uses unification to match the type of each [t] with the goal
       (to do backward reasoning) or with a hypothesis (to do forward reasoning).
       Specifying multiple {!type:constr_with_bindings} is equivalent to giving each one
@@ -1204,7 +1203,7 @@ module Std : sig
 
   (** {3 Managing the local context} *)
 
-  val intro : ?name:ident -> ?where:move_location -> unit -> unit tactic
+  val intro : ?name:ident -> ?where:Syntax.move_location -> unit -> unit tactic
   (** [intro ?name ?where ()] introduces an item in the context by removing
       certain constructs in the goal. If no item is found, the tactic fails.
 
@@ -1220,7 +1219,7 @@ module Std : sig
 
       @see <https://rocq-prover.org/doc/master/refman/proof-engine/tactics.html#rocq:tacn.intro> Reference manual *)
 
-  val intros : ?e:evar_flag -> ?patterns:intro_pattern list -> unit -> unit tactic
+  val intros : ?e:bool -> ?patterns:intro_pattern list -> unit -> unit tactic
   (** [intros ?e ?patterns ()] introduces a list of new variables in the context
       using the [patterns]. If [patterns] is not specified, the tactic
       introduces items until it reaches the head constant; it never fails and
@@ -1287,7 +1286,7 @@ module Std : sig
       @see <https://rocq-prover.org/doc/master/refman/proof-engine/tactics.html#rocq:tacn.rename> Reference manual
    *)
 
-  val set : ?e:evar_flag -> ?where:clause -> Name.t -> constr -> unit tactic
+  val set : ?e:bool -> ?where:clause -> Name.t -> constr -> unit tactic
   (** [set ?e name t ?where] adds a new local definition [name := t] and replaces
       the body expression with the new variable [name] in the goal, or as specified
       by [where].
@@ -1302,7 +1301,7 @@ module Std : sig
    *)
 
   val remember :
-    ?e:evar_flag ->
+    ?e:bool ->
     ?as_name:ident ->
     ?eqn:intro_pattern_naming ->
     ?where:clause ->
@@ -1492,7 +1491,7 @@ module Std : sig
 
   (** {4 Rewriting with Leibniz and setoid equality} *)
 
-  val rewrite : ?e:evar_flag -> ?where:clause -> ?by:unit tactic -> rewriting list -> unit tactic
+  val rewrite : ?e:bool -> ?where:clause -> ?by:unit tactic -> rewriting list -> unit tactic
   (** [rewrite rs ?e ?where ?by] replaces subterms with other subterms that have been proven to be equal
       or logically equivalent.
 
@@ -1649,7 +1648,7 @@ module Std : sig
 
   (** {4 Applying constructors} *)
 
-  val constructor : ?e:evar_flag -> ?n:int -> ?bindings:bindings -> unit -> unit tactic
+  val constructor : ?e:bool -> ?n:int -> ?bindings:bindings -> unit -> unit tactic
   (** [constructor ?e ?n ?bindings ()] applies the [n]-th constructor, if
       specified, or the first matching constructor to prove the current
       goal. Fails if no constructor applies.
@@ -1660,7 +1659,7 @@ module Std : sig
 
       @see <https://rocq-prover.org/doc/master/refman/proofs/writing-proofs/reasoning-inductives.html#rocq:tacn.constructor> Reference manual *)
 
-  val split : ?e:evar_flag -> ?bindings:bindings -> unit -> unit tactic
+  val split : ?e:bool -> ?bindings:bindings -> unit -> unit tactic
   (** [split ?e ?bindings ()] proves a conjunction [A /\ B] or an iff [A <-> B]
       by splitting it into subgoals. For conjunction, the left conjunct
       becomes the first subgoal. Any bindings are applied to the constructor.
@@ -1671,7 +1670,7 @@ module Std : sig
 
       @see <https://rocq-prover.org/doc/master/refman/proofs/writing-proofs/reasoning-inductives.html#applying-constructors> Reference manual *)
 
-  val left : ?e:evar_flag -> ?bindings:bindings -> unit -> unit tactic
+  val left : ?e:bool -> ?bindings:bindings -> unit -> unit tactic
   (** [left ?e ?bindings ()] proves a disjunctive goal [A \/ B] by selecting the
       left disjunct [A], generating a subgoal for [A]. Any bindings are
       applied to the constructor.
@@ -1682,7 +1681,7 @@ module Std : sig
 
       @see <https://rocq-prover.org/doc/master/refman/proofs/writing-proofs/reasoning-inductives.html#applying-constructors> Reference manual *)
 
-  val right : ?e:evar_flag -> ?bindings:bindings -> unit -> unit tactic
+  val right : ?e:bool -> ?bindings:bindings -> unit -> unit tactic
   (** [right ?e ?bindings ()] proves a disjunctive goal [A \/ B] by selecting the
       right disjunct [B], generating a subgoal for [B]. Any bindings are
       applied to the constructor.
@@ -1695,7 +1694,7 @@ module Std : sig
 
   (** {4 Case analysis} *)
 
-  val destruct : ?e:evar_flag -> ?using:constr_with_bindings -> induction_clause list -> unit tactic
+  val destruct : ?e:bool -> ?using:constr_with_bindings -> induction_clause list -> unit tactic
   (** [destruct clauses ?e ?using] perform case analysis on each clause in
       [clauses], generating a subgoal for each of the constructors of the inductive type.
 
@@ -1709,7 +1708,7 @@ module Std : sig
       @see <https://rocq-prover.org/doc/master/refman/proofs/writing-proofs/reasoning-inductives.html#rocq:tacn.destruct> Reference manual
    *)
 
-  val case : ?e:evar_flag -> constr_with_bindings -> unit tactic
+  val case : ?e:bool -> constr_with_bindings -> unit tactic
   (** [case c ?e] is an older, more basic tactic to perform case analysis
       without recursion. We recommend using {!val:destruct} instead where possible.
       [case] only modifies the goal; it does not modify the local context.
@@ -1723,7 +1722,7 @@ module Std : sig
 
   (** {4 Induction} *)
 
-  val induction : ?e:evar_flag -> ?using:constr_with_bindings -> induction_clause list -> unit tactic
+  val induction : ?e:bool -> ?using:constr_with_bindings -> induction_clause list -> unit tactic
   (** [induction clauses ?e ?using] applies induction principles to each clause in
       [clauses], left to right.
 
@@ -1737,7 +1736,7 @@ module Std : sig
       @see <https://rocq-prover.org/doc/master/refman/proofs/writing-proofs/reasoning-inductives.html#rocq:tacn.induction> Reference manual
    *)
 
-  val elim : ?e:evar_flag -> ?using:constr_with_bindings -> constr_with_bindings -> unit tactic
+  val elim : ?e:bool -> ?using:constr_with_bindings -> constr_with_bindings -> unit tactic
   (** [elim c ?e ?using] is an older, more basic induction tactic. Unlike
       {!val:induction}, [elim] only modifies the goal; it does not modify the local
       context. We recommend using {!val:induction} instead where possible.
@@ -1766,7 +1765,7 @@ module Std : sig
 
   (** {4 Equality of inductive types} *)
 
-  val discriminate : ?e:evar_flag -> ?arg:destruction_arg -> unit -> unit tactic
+  val discriminate : ?e:bool -> ?arg:destruction_arg -> unit -> unit tactic
   (** [discriminate ?e ?arg ()] proves the current goal by discriminating an
       equality between two constructors of the same inductive type. The
       argument [arg] specifies which hypothesis or term to discriminate.
@@ -1781,7 +1780,7 @@ module Std : sig
 
       @see <https://rocq-prover.org/doc/master/refman/proofs/writing-proofs/reasoning-inductives.html#rocq:tacn.discriminate> Reference manual *)
 
-  val injection : ?e:evar_flag -> ?arg:destruction_arg -> ?as_patterns:intro_pattern list -> unit -> unit tactic
+  val injection : ?e:bool -> ?arg:destruction_arg -> ?as_patterns:intro_pattern list -> unit -> unit tactic
   (** [injection () ?e ?ipat ?arg] exploits the property that constructors of
       inductive types are injective, i.e. that if [c] is a constructor of an inductive
       type and [c t1 = c t2] then [t1 = t2] are equal too.
