@@ -1166,7 +1166,6 @@ module Std : sig
   type destruction_arg = Tac2types.destruction_arg
   type induction_clause = Tac2types.induction_clause
   type repeat = Equality.multi
-  type orientation = Tac2types.orientation
   type rewriting = Tac2types.rewriting
   type evar_flag = Tac2types.evars_flag
   type move_location = Id.t Logic.move_location
@@ -1504,7 +1503,7 @@ module Std : sig
       @see <https://rocq-prover.org/doc/master/refman/proofs/writing-proofs/equality.html#rocq:tacn.rewrite> Reference manual
    *)
 
-  val setoid_rewrite : ?ltr:orientation -> ?in_hyp:ident -> constr_with_bindings -> occurrences -> unit tactic
+  val setoid_rewrite : ?ltr:bool -> ?in_hyp:ident -> constr_with_bindings -> occurrences -> unit tactic
   (** [setoid_rewrite ?ltr ?in_hyp c occs] rewrites an occurrence of the term
       matched by [c] in the goal or the specified hypothesis using a setoid
       equality. Unlike {!val:rewrite}, this tactic works with relations

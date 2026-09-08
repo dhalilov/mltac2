@@ -1001,7 +1001,6 @@ module Ltac2Std = struct
   type destruction_arg = Tac2types.destruction_arg
   type induction_clause = Tac2types.induction_clause
   type repeat = Equality.multi
-  type orientation = Tac2types.orientation
   type rewriting = Tac2types.rewriting
   type evar_flag = Tac2types.evars_flag
   type move_location = Id.t Logic.move_location
