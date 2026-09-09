@@ -1143,6 +1143,27 @@ module Scheme : sig
 end
 [%%endif]
 
+(** {2 Syntax DSL} *)
+
+module Syntax : sig
+  (** {3 Move locations} *)
+
+  type move_location
+
+  val at : [< `bottom | `top ] -> move_location
+  val before : ident -> move_location
+  val after : ident -> move_location
+
+  (** {3 Clauses} *)
+
+  type clause
+
+  val ( |- ) :
+    Ltac2_plugin.Tac2types.hyp_location list option ->
+    Ltac2_plugin.Tac2types.occurrences ->
+    clause
+end
+
 (** {2 Standard tactics} *)
 
 module Std : sig
@@ -1167,7 +1188,6 @@ module Std : sig
   type induction_clause = Tac2types.induction_clause
   type repeat = Equality.multi
   type rewriting = Tac2types.rewriting
-  type move_location = Id.t Logic.move_location
   type inversion_kind = Inv.inversion_kind
 
   (** {3 Applying theorems} *)
@@ -1251,7 +1271,7 @@ module Std : sig
       @see <https://rocq-prover.org/doc/master/refman/proof-engine/tactics.html#rocq:tacn.revert> Reference manual
    *)
 
-  val move : ident -> move_location -> unit tactic
+  val move : ident -> Syntax.move_location -> unit tactic
   (** [move hyp where] moves [hyp] and hypotheses that directly or directly refer to
       [hyp] that appear between [hyp] and [where].
 

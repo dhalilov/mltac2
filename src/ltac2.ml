@@ -978,6 +978,36 @@ module Ltac2Unification = struct
   let solve_constraints = Refine.solve_constraints
 end
 
+(** {2 Syntax DSL}
+
+    We provide custom syntax for easily inputting tactic arguments, mirorring
+    Ltac2 notations. In addition to being easier to type, controlling the input
+    syntax allows us to provide stability by decoupling it from {!module:Tac2types}.
+
+    Note: to provide user stability, we can only define a new frontend for argument values;
+    for return types, we provide extensible versions of those defined in {!module:Tac2types}.
+ *)
+
+module Syntax = struct
+  (** {3 Move locations} *)
+
+  type move_location = Id.t Logic.move_location
+
+  let at = function
+    | `top -> Logic.MoveFirst
+    | `bottom -> Logic.MoveLast
+
+  let before (id: Id.t) = Logic.MoveBefore id
+  let after (id: Id.t) = Logic.MoveAfter id
+
+  (** {3 Clauses} *)
+
+  type clause = Tac2types.clause
+
+  let (|-) hyps concl: Tac2types.clause =
+    { onhyps = hyps; concl_occs = concl }
+end
+
 (** {2 Standard tactics} *)
 
 module Ltac2Std = struct
@@ -1002,7 +1032,6 @@ module Ltac2Std = struct
   type induction_clause = Tac2types.induction_clause
   type repeat = Equality.multi
   type rewriting = Tac2types.rewriting
-  type move_location = Id.t Logic.move_location
   type inversion_kind = Inv.inversion_kind
 
   let intro ?name ?(where = Logic.MoveLast) () =
