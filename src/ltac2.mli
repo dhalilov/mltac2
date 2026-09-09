@@ -1162,6 +1162,20 @@ module Syntax : sig
     Ltac2_plugin.Tac2types.hyp_location list option ->
     Ltac2_plugin.Tac2types.occurrences ->
     clause
+
+  (** {3 Inversion kinds} *)
+
+  type inversion_kind
+  (** Type of inversion performed. *)
+
+  val simple : inversion_kind
+  (** Behave like Ltac's [simple inversion]. *)
+
+  val full : inversion_kind
+  (** Behave like Ltac's [inversion]. *)
+
+  val full_clear : inversion_kind
+  (** Behave like Ltac's [inversion_clear]. *)
 end
 
 (** {2 Standard tactics} *)
@@ -1188,7 +1202,6 @@ module Std : sig
   type induction_clause = Tac2types.induction_clause
   type repeat = Equality.multi
   type rewriting = Tac2types.rewriting
-  type inversion_kind = Inv.inversion_kind
 
   (** {3 Applying theorems} *)
 
@@ -1820,7 +1833,7 @@ module Std : sig
       @see <https://rocq-prover.org/doc/master/refman/proofs/writing-proofs/reasoning-inductives.html#rocq:tacn.injection> Reference manual *)
 
   val inversion :
-    ?kind:inversion_kind ->
+    ?kind:Syntax.inversion_kind ->
     ?as_pattern:intro_pattern ->
     ?in_hyps:ident list ->
     destruction_arg ->

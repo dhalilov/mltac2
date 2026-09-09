@@ -1006,6 +1006,14 @@ module Syntax = struct
 
   let (|-) hyps concl: Tac2types.clause =
     { onhyps = hyps; concl_occs = concl }
+
+  (** {3 Inversion} *)
+
+  type inversion_kind = Inv.inversion_kind
+
+  let simple: inversion_kind = SimpleInversion
+  let full: inversion_kind = FullInversion
+  let full_clear: inversion_kind = FullInversionClear
 end
 
 (** {2 Standard tactics} *)
@@ -1032,7 +1040,6 @@ module Ltac2Std = struct
   type induction_clause = Tac2types.induction_clause
   type repeat = Equality.multi
   type rewriting = Tac2types.rewriting
-  type inversion_kind = Inv.inversion_kind
 
   let intro ?name ?(where = Logic.MoveLast) () =
     Tactics.intro_move name where
