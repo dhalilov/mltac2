@@ -1200,7 +1200,6 @@ module Std : sig
   and or_and_intro_pattern = Tac2types.or_and_intro_pattern
   type destruction_arg = Tac2types.destruction_arg
   type induction_clause = Tac2types.induction_clause
-  type repeat = Equality.multi
   type rewriting = Tac2types.rewriting
 
   (** {3 Applying theorems} *)
