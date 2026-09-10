@@ -1221,22 +1221,65 @@ module Syntax : sig
   (** [pattern%term] first applies [term] with the {!val:Std.apply} tactic on
       the hypothesis to be introduced, then it uses [pattern]. *)
 
+  (** {3 Occurrences} *)
+
+  type 'a occurrences
+  (** An occurrence is a subterm of a goal or hypothesis that matches a
+      pattern. *)
+
+  val at : 'a list -> 'a occurrences
+  (** [at l] selects the specified occurrences. *)
+
+  val everywhere : 'a occurrences
+  (** [everywhere] selects every occurrence (similar to Ltac's [*]). *)
+
+  val everywhere_but : int list -> int occurrences
+  (** [everywhere_but l] selects every occurrence that is not in [l] (similar to
+      Ltac's [at -l]). *)
+
+  val nowhere : 'a occurrences
+  (** [nowhere] selects no occurrence. *)
+
+  (** {3 Clauses} *)
+
+  type hypothesis_selector
+  (** Selects whether an occurrence should apply to the type or value of the
+      hypothesis. *)
+
+  val hyp : ident -> hypothesis_selector
+  (** Selects the whole hypothesis. *)
+
+  val type_of : ident -> hypothesis_selector
+  (** Selects the type part of the hypothesis. *)
+
+  val value_of : ident -> hypothesis_selector
+  (** Selects the value part of the hypothesis. *)
+
+  type clause
+  (** A clause selects a subset of occurrences in the hypothesis and the goal. *)
+
+  val ( |- ) :
+    (hypothesis_selector * int occurrences) occurrences ->
+    int occurrences ->
+    clause
+  (** [hyps_occs |- goal_occs] creates a clause that selects occurrences in the hypotheses
+      according to [hyps_occs], and occurrences in the goal according to [goal_occs].
+
+      Examples:
+       - [everywhere |- everywhere] corresponds to [* |- *].
+       - [nowhere |- everywhere] corresponds to [|- *].
+       - [nowhere |- nowhere] corresponds to [|-].
+       - [at [(type_of h, everywhere)] |- (at [1; 2])] corresponds to [(type of h) |- * at 1 2].
+   *)
+
   (** {3 Move locations} *)
 
   type move_location
 
-  val at : [< `bottom | `top ] -> move_location
+  val top : move_location
+  val bottom : move_location
   val before : ident -> move_location
   val after : ident -> move_location
-
-  (** {3 Clauses} *)
-
-  type clause
-
-  val ( |- ) :
-    Ltac2_plugin.Tac2types.hyp_location list option ->
-    Ltac2_plugin.Tac2types.occurrences ->
-    clause
 
   (** {3 Inversion kinds} *)
 
@@ -1260,8 +1303,6 @@ module Std : sig
 
   type bindings = Tac2types.bindings
   type constr_with_bindings = Tac2types.constr_with_bindings
-  type occurrences = Tac2types.occurrences
-  type clause = Tac2types.clause
   type reference = GlobRef.t
   type destruction_arg = Tac2types.destruction_arg
   type induction_clause = Tac2types.induction_clause
@@ -1464,7 +1505,7 @@ module Std : sig
       @see <https://rocq-prover.org/doc/master/refman/proof-engine/tactics.html#rocq:tacn.specialize> Reference manual
    *)
 
-  val generalize : (constr * occurrences * Name.t) list -> unit tactic
+  val generalize : (constr * int occurrences * Name.t) list -> unit tactic
   (** [generalize [(t, where, x)]] replaces the goal [G] with [forall (x: T), G'], where [t] is a subterm
       of [G] of type [T], and [G'] is obtained by replacing all occurrences of [t] with [x] within [G].
       Specifying multiple [t] is equivalent to [generalize t₁; …; generalize tₙ].
@@ -1599,7 +1640,7 @@ module Std : sig
       @see <https://rocq-prover.org/doc/master/refman/proofs/writing-proofs/equality.html#rocq:tacn.rewrite> Reference manual
    *)
 
-  val setoid_rewrite : ?ltr:bool -> ?in_hyp:ident -> constr_with_bindings -> occurrences -> unit tactic
+  val setoid_rewrite : ?ltr:bool -> ?in_hyp:ident -> constr_with_bindings -> int occurrences -> unit tactic
   (** [setoid_rewrite ?ltr ?in_hyp c occs] rewrites an occurrence of the term
       matched by [c] in the goal or the specified hypothesis using a setoid
       equality. Unlike {!val:rewrite}, this tactic works with relations
@@ -1707,7 +1748,7 @@ module Std : sig
 
         @see <https://rocq-prover.org/doc/master/refman/proofs/writing-proofs/equality.html#rocq:tacn.hnf> Reference manual *)
 
-    val simpl : ?where:(pattern * occurrences) -> red_flag list -> t tactic
+    val simpl : ?where:(pattern * int occurrences) -> red_flag list -> t tactic
     (** [simpl ?where flags] reduces a term to something still readable instead of
         fully normalizing it. It performs a sort of strong normalization with two
         key differences:
@@ -1741,7 +1782,7 @@ module Std : sig
 
         @see <https://rocq-prover.org/doc/master/refman/proofs/writing-proofs/equality.html#applying-conversion-rules> Reference manual *)
 
-    val unfold : (reference * occurrences) list -> t tactic
+    val unfold : (reference * int occurrences) list -> t tactic
     (** [unfold refs] replaces each occurrence of the specified global
         references by their definitions in the goal.
 
@@ -1754,20 +1795,20 @@ module Std : sig
 
         @see <https://rocq-prover.org/doc/master/refman/proofs/writing-proofs/equality.html#rocq:tacn.fold> Reference manual *)
 
-    val pattern : (constr * occurrences) list -> t
+    val pattern : (constr * int occurrences) list -> t
     (** [pattern cs] introduces [β]-redexes in the goal so that the
         specified subterms become separate variables at the head of the
         term.
 
         @see <https://rocq-prover.org/doc/master/refman/proofs/writing-proofs/equality.html#rocq:tacn.pattern> Reference manual *)
 
-    val vm : ?where:(pattern * occurrences) -> unit -> t
+    val vm : ?where:(pattern * int occurrences) -> unit -> t
     (** [vm ?where ()] uses the virtual machine for very fast computation, with
         an optional reduction context.
 
         @see <https://rocq-prover.org/doc/master/refman/proofs/writing-proofs/equality.html#rocq:tacn.vm_compute> Reference manual *)
 
-    val native : ?where:(pattern * occurrences) -> unit -> t
+    val native : ?where:(pattern * int occurrences) -> unit -> t
     (** [native ?where ()] uses native code compilation for the fastest possible
         computation, with an optional reduction context.
 

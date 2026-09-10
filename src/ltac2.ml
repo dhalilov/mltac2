@@ -1036,23 +1036,56 @@ module Syntax = struct
   let ( @** ) = IntroForthcoming false
   let ( % ) pat term = IntroAction (IntroApplyOn (thunk Tac2ffi.constr term, pat))
 
+  (** {3 Occurrences} *)
+
+  type 'a occurrences =
+    | At of 'a list
+    | Everywhere
+    | EverywhereBut of ('a, int) Type.eq * int list
+    | Nowhere
+
+  let at l = At l
+  let everywhere = Everywhere
+  let everywhere_but (l: int list) = EverywhereBut (Type.Equal, l)
+  let nowhere = Nowhere
+
+  let make_occurrences = function
+    | At l -> OnlyOccurrences l
+    | Everywhere -> AllOccurrences
+    | EverywhereBut (_, l) -> AllOccurrencesBut l
+    | Nowhere -> NoOccurrences
+
+  (** {3 Clauses} *)
+
+  type hypothesis_selector = Tac2types.hyp_location_flag * Id.t
+
+  let hyp h = InHyp, h
+  let type_of h = InHypTypeOnly, h
+  let value_of h = InHypValueOnly, h
+
+  type clause = Tac2types.clause
+
+  let ( |- ) (hyps: (hypothesis_selector * int occurrences) occurrences) (goal: int occurrences) =
+    match hyps with
+    | Everywhere ->
+       { onhyps = None; concl_occs = make_occurrences goal }
+    | Nowhere ->
+       { onhyps = Some []; concl_occs = make_occurrences goal }
+    | At hyps ->
+       let f ((flag, hyp), occs) = (hyp, make_occurrences occs, flag) in
+       let hyps = List.map f hyps in
+       { onhyps = Some hyps; concl_occs = make_occurrences goal }
+    | EverywhereBut _ ->
+       . (* refuted by the type equality *)
+
   (** {3 Move locations} *)
 
   type move_location = Id.t Logic.move_location
 
-  let at = function
-    | `top -> Logic.MoveFirst
-    | `bottom -> Logic.MoveLast
-
+  let top = Logic.MoveFirst
+  let bottom = Logic.MoveLast
   let before (id: Id.t) = Logic.MoveBefore id
   let after (id: Id.t) = Logic.MoveAfter id
-
-  (** {3 Clauses} *)
-
-  type clause = Tac2types.clause
-
-  let (|-) hyps concl: Tac2types.clause =
-    { onhyps = hyps; concl_occs = concl }
 
   (** {3 Inversion} *)
 
@@ -1068,8 +1101,6 @@ end
 module Ltac2Std = struct
   type bindings = Tac2types.bindings
   type constr_with_bindings = Tac2types.constr_with_bindings
-  type occurrences = Tac2types.occurrences
-  type clause = Tac2types.clause
   type reference = GlobRef.t
   type destruction_arg = Tac2types.destruction_arg
   type induction_clause = Tac2types.induction_clause
@@ -1088,7 +1119,9 @@ module Ltac2Std = struct
 
   let case ?(e = false) c = Tac2tactics.general_case_analysis e c
 
-  let generalize = Tac2tactics.generalize
+  let generalize l =
+    let l = List.map (fun (c, occs, name) -> (c, Syntax.make_occurrences occs, name)) l in
+    Tac2tactics.generalize l
 
   let assert_ ?as_pattern ?by c =
     (* TODO: This is fishy. *)
@@ -1154,18 +1187,22 @@ module Ltac2Std = struct
 
     type t = Redexpr.red_expr
 
+    let make_red_context where =
+      let f (c, occs) = c, Syntax.make_occurrences occs in
+      Option.map f where
+
     let red = Genredexpr.Red
     let hnf = Genredexpr.Hnf
-    let simpl ?where flags = Tac2tactics.simpl (Redops.make_red_flag flags) where
+    let simpl ?where flags = Tac2tactics.simpl (Redops.make_red_flag flags) (make_red_context where)
     let cbv flags = Tac2tactics.cbv (Redops.make_red_flag flags)
     let cbn flags = Tac2tactics.cbn (Redops.make_red_flag flags)
     let lazy_ flags = Tac2tactics.lazy_ (Redops.make_red_flag flags)
-    let unfold = Tac2tactics.unfold
+    let unfold l = Tac2tactics.unfold (List.map (fun (r, o) -> r, Syntax.make_occurrences o) l)
     let fold cs = Genredexpr.Fold cs
-    let pattern = Tac2tactics.pattern
+    let pattern l = Tac2tactics.pattern (List.map (fun (c, o) -> c, Syntax.make_occurrences o) l)
 
-    let vm ?where () = Tac2tactics.vm where
-    let native ?where () = Tac2tactics.native where
+    let vm ?where () = Tac2tactics.vm (make_red_context where)
+    let native ?where () = Tac2tactics.native (make_red_context where)
   end
 
   let eval_in = Tac2tactics.reduce_in
@@ -1208,7 +1245,9 @@ module Ltac2Std = struct
     let by = Option.map (thunk' Tac2ffi.unit) by in
     Tac2tactics.rewrite e rewrites where by
 
-  let setoid_rewrite ?(ltr = true) ?in_hyp t where = Tac2tactics.setoid_rewrite ltr (return t) where in_hyp
+  let setoid_rewrite ?(ltr = true) ?in_hyp t where =
+    let where = Syntax.make_occurrences where in
+    Tac2tactics.setoid_rewrite ltr (return t) where in_hyp
 
   let inversion ?(kind = Inv.FullInversion) ?as_pattern ?in_hyps arg =
     Tac2tactics.inversion kind arg as_pattern in_hyps
