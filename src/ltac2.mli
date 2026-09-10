@@ -1146,6 +1146,14 @@ end
 (** {2 Syntax DSL} *)
 
 module Syntax : sig
+  (** {3 Hypotheses} *)
+
+  type hypothesis
+  (** Type of hypothesis target. *)
+
+  val named_hyp : ident -> hypothesis
+  val nth_hyp : int -> hypothesis
+
   (** {3 Intropatterns} *)
 
   type intropattern
@@ -1248,7 +1256,6 @@ end
 (** {2 Standard tactics} *)
 
 module Std : sig
-  type hypothesis = Tac2types.quantified_hypothesis
   open Syntax
 
   type bindings = Tac2types.bindings
@@ -1329,7 +1336,7 @@ module Std : sig
       of premises.
 
       We recommend explicitly naming items with [intros] instead of using
-      [intros_until (AnonHyp n)].
+      [intros_until (nth_hyp n)].
 
       @see <https://rocq-prover.org/doc/master/refman/proof-engine/tactics.html#rocq:tacn.intros-until> Reference manual
    *)

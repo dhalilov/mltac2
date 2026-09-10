@@ -989,6 +989,13 @@ end
  *)
 
 module Syntax = struct
+  (** {3 Hypotheses} *)
+
+  type hypothesis = Tac2types.quantified_hypothesis
+
+  let named_hyp h = NamedHyp (CAst.make h)
+  let nth_hyp n = AnonHyp n
+
   (** {3 Intropatterns} *)
 
   type intropattern = Tac2types.intro_pattern
@@ -1059,7 +1066,6 @@ end
 (** {2 Standard tactics} *)
 
 module Ltac2Std = struct
-  type hypothesis = Tac2types.quantified_hypothesis
   type bindings = Tac2types.bindings
   type constr_with_bindings = Tac2types.constr_with_bindings
   type occurrences = Tac2types.occurrences
