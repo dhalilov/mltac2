@@ -1185,7 +1185,6 @@ module Std : sig
   type bindings = Tac2types.bindings
   type constr_with_bindings = Tac2types.constr_with_bindings
   type occurrences = Tac2types.occurrences
-  type hyp_location_flag = Tac2types.hyp_location_flag
   type clause = Tac2types.clause
   type reference = GlobRef.t
   type intro_pattern = Tac2types.intro_pattern
