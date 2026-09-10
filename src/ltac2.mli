@@ -1188,11 +1188,6 @@ module Std : sig
   type hyp_location_flag = Tac2types.hyp_location_flag
   type clause = Tac2types.clause
   type reference = GlobRef.t
-  [%%if rocq >= (9, 2)]
-  type red_flags = Tac2types.red_flag
-  [%%else]
-  type red_flags = reference Genredexpr.glob_red_flag
-  [%%endif]
   type intro_pattern = Tac2types.intro_pattern
   and intro_pattern_naming = Tac2types.intro_pattern_naming
   and intro_pattern_action = Tac2types.intro_pattern_action
@@ -1579,6 +1574,53 @@ module Std : sig
 
   [%%if rocq >= (9, 1)]
   module Red : sig
+    type delta_red
+    (** List of references to [delta]-reduce. *)
+
+    val only : reference list -> delta_red
+    (** Limits delta unfolding to the listed constants. *)
+
+    val except : reference list -> delta_red
+    (** Limits delta unfolding to all but the listed constants. *)
+
+    val all : delta_red
+    (** Does not limit delta unfolding. Equivalent to [except []]. *)
+
+    type red_flag
+    (** Type of reduction flag. *)
+
+    val head : red_flag
+    (** Do only head reduction, without going under binders. *)
+
+    val beta : red_flag
+    (** Beta-reduction of functional application. *)
+
+    val delta : delta_red -> red_flag
+    (** Delta-reduction: unfolding of transparent constants. *)
+
+    val match_ : red_flag
+    (** Reduction of [match] expressions. *)
+
+    val fix : red_flag
+    (** Reduction of [fix] expressions. *)
+
+    val cofix : red_flag
+    (** Reduction of [cofix] expressions. *)
+
+    val iota : red_flag list
+    (** Iota-reduction of pattern-matching ([match]) over a constructed term and
+        reduction of [fix] and [cofix] expressions. Shorthand for [[match; fix;
+        cofix]]. *)
+
+    val zeta : red_flag
+    (** Zeta-reduction: reduction of let-in definitions. *)
+
+    val all_flags : head:bool -> red_flag list
+    (** All reduction flags.
+
+        @param head (bool)
+          Whether to perform head reduction or not. *)
+
     type t = Redexpr.red_expr
     (** Type representing a reduction expression. Red expressions describe
         which reduction strategy to apply during tactic execution. *)
@@ -1594,7 +1636,7 @@ module Std : sig
 
         @see <https://rocq-prover.org/doc/master/refman/proofs/writing-proofs/equality.html#rocq:tacn.hnf> Reference manual *)
 
-    val simpl : ?where:(pattern * occurrences) -> red_flags -> t tactic
+    val simpl : ?where:(pattern * occurrences) -> red_flag list -> t tactic
     (** [simpl ?where flags] reduces a term to something still readable instead of
         fully normalizing it. It performs a sort of strong normalization with two
         key differences:
@@ -1608,12 +1650,12 @@ module Std : sig
 
         @see <https://rocq-prover.org/doc/master/refman/proofs/writing-proofs/equality.html#rocq:tacn.simpl> Reference manual *)
 
-    val cbv : red_flags -> t tactic
+    val cbv : red_flag list -> t tactic
     (** [cbv flags] normalize the goal as specified by [flags].
 
         @see <https://rocq-prover.org/doc/master/refman/proofs/writing-proofs/equality.html#rocq:tacn.cbv> Reference manual *)
 
-    val cbn : red_flags -> t tactic
+    val cbn : red_flag list -> t tactic
     (** [cbn flags] was intended to be a more principled, faster and more
         predictable replacement for {!val:simpl}. The main difference is that
         [cbn] may unfold constants even when they cannot be reused in recursive
@@ -1621,7 +1663,7 @@ module Std : sig
 
         @see <https://rocq-prover.org/doc/master/refman/proofs/writing-proofs/equality.html#rocq:tacn.cbn> Reference manual *)
 
-    val lazy_ : red_flags -> t tactic
+    val lazy_ : red_flag list -> t tactic
     (** [lazy_ flags] performs on-demand reduction using a lazy strategy,
         only reducing subterms that are needed for the goal, with the given
         reduction [flags].

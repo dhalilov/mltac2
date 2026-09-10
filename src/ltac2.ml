@@ -1026,11 +1026,6 @@ module Ltac2Std = struct
   type hyp_location_flag = Tac2types.hyp_location_flag
   type clause = Tac2types.clause
   type reference = GlobRef.t
-  [%%if rocq >= (9, 2)]
-  type red_flags = Tac2types.red_flag
-  [%%else]
-  type red_flags = reference Genredexpr.glob_red_flag
-  [%%endif]
   type intro_pattern = Tac2types.intro_pattern
   and intro_pattern_naming = Tac2types.intro_pattern_naming
   and intro_pattern_action = Tac2types.intro_pattern_action
@@ -1088,14 +1083,40 @@ module Ltac2Std = struct
 
   [%%if rocq >= (9, 1)]
   module Red = struct
+    type delta_red =
+      | Only of reference list
+      | Except of reference list
+
+    let only cs = Only cs
+    let except cs = Except cs
+    let all = except []
+
+    type red_flag = reference Genredexpr.red_atom
+
+    open Genredexpr
+
+    let head = FHead
+    let beta = FBeta
+    let delta = function
+      | Only cs -> FConst cs
+      | Except cs -> FDeltaBut cs
+    let match_ = FMatch
+    let fix = FFix
+    let cofix = FCofix
+    let iota = [FMatch; FFix; FCofix] (* iota is a pseudo red_flag *)
+    let zeta = FZeta
+    let all_flags ~head =
+      let full = [beta; delta all; match_; fix; cofix; zeta] in
+      if head then FHead :: full else full
+
     type t = Redexpr.red_expr
 
     let red = Genredexpr.Red
     let hnf = Genredexpr.Hnf
-    let simpl ?where flags = Tac2tactics.simpl flags where
-    let cbv = Tac2tactics.cbv
-    let cbn = Tac2tactics.cbn
-    let lazy_ = Tac2tactics.lazy_
+    let simpl ?where flags = Tac2tactics.simpl (Redops.make_red_flag flags) where
+    let cbv flags = Tac2tactics.cbv (Redops.make_red_flag flags)
+    let cbn flags = Tac2tactics.cbn (Redops.make_red_flag flags)
+    let lazy_ flags = Tac2tactics.lazy_ (Redops.make_red_flag flags)
     let unfold = Tac2tactics.unfold
     let fold cs = Genredexpr.Fold cs
     let pattern = Tac2tactics.pattern
