@@ -989,6 +989,46 @@ end
  *)
 
 module Syntax = struct
+  (** {3 Intropatterns} *)
+
+  type intropattern = Tac2types.intro_pattern
+
+  (** {4 Naming patterns} *)
+
+  type naming_intropattern = intropattern (* used by the signature *)
+
+  let name h = IntroNaming (IntroIdentifier h)
+  let fresh h = IntroNaming (IntroFresh h)
+  let ( ?: ) = fresh
+  let ( ?? ) = IntroNaming IntroAnonymous
+  let __ = IntroAction IntroWildcard
+
+  (** {4 Splitting patterns} *)
+
+  (** Infix syntax for and-intropatterns.
+      Right-associative per OCaml's associativity rules. *)
+  let ( & ) x y =
+    match y with
+    | IntroAction (IntroOrAndPattern (IntroAndPattern y)) ->
+       IntroAction (IntroOrAndPattern (IntroAndPattern (x :: y)))
+    | _ ->
+       IntroAction (IntroOrAndPattern (IntroAndPattern [x; y]))
+
+  let and_pattern patterns = IntroAction (IntroOrAndPattern (IntroAndPattern patterns))
+  let or_pattern patterns = IntroAction (IntroOrAndPattern (IntroOrPattern patterns))
+
+  (** {4 Equality patterns} *)
+
+  let ( --> ) = IntroAction (IntroRewrite true)
+  let ( <-- ) = IntroAction (IntroRewrite false)
+  let ( @= ) pats = IntroAction (IntroInjection pats)
+
+  (** {4 Other patterns} *)
+
+  let ( @* ) = IntroForthcoming true
+  let ( @** ) = IntroForthcoming false
+  let ( % ) pat term = IntroAction (IntroApplyOn (thunk Tac2ffi.constr term, pat))
+
   (** {3 Move locations} *)
 
   type move_location = Id.t Logic.move_location
@@ -1025,10 +1065,6 @@ module Ltac2Std = struct
   type occurrences = Tac2types.occurrences
   type clause = Tac2types.clause
   type reference = GlobRef.t
-  type intro_pattern = Tac2types.intro_pattern
-  and intro_pattern_naming = Tac2types.intro_pattern_naming
-  and intro_pattern_action = Tac2types.intro_pattern_action
-  and or_and_intro_pattern = Tac2types.or_and_intro_pattern
   type destruction_arg = Tac2types.destruction_arg
   type induction_clause = Tac2types.induction_clause
   type rewriting = Tac2types.rewriting
@@ -1069,7 +1105,9 @@ module Ltac2Std = struct
     Proofview.tclEVARMAP >>= fun sigma ->
     Tac2tactics.letin_pat_tac e None name (Some sigma, c) where
 
-  let remember ?(e = false) ?as_name ?(eqn = IntroAnonymous) ?(where = default_everywhere) c =
+  let remember ?(e = false) ?as_name ?(eqn = Syntax.__) ?(where = default_everywhere) c =
+    (* By the invariants on [naming_intropattern], it must be [IntroNaming]. *)
+    let eqn = match eqn with IntroNaming eqn -> eqn | _ -> assert false in
     let as_name = match as_name with Some id -> Name id | None -> Anonymous in
     Proofview.tclEVARMAP >>= fun sigma ->
     Tac2tactics.letin_pat_tac e (Some (true, eqn)) as_name (Some sigma, c) where
