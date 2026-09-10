@@ -1026,7 +1026,6 @@ module Ltac2Std = struct
   type hyp_location_flag = Tac2types.hyp_location_flag
   type clause = Tac2types.clause
   type reference = GlobRef.t
-  type strength = Genredexpr.strength
   [%%if rocq >= (9, 2)]
   type red_flags = Tac2types.red_flag
   [%%else]
