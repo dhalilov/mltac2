@@ -1280,11 +1280,19 @@ module Syntax : sig
   (** {3 Move locations} *)
 
   type move_location
+  (** Specifies where to move a hypothesis for the {!val:Std.move} tactic. *)
 
   val top : move_location
+  (** [at top]. *)
+
   val bottom : move_location
+  (** [at bottom]. *)
+
   val before : ident -> move_location
+  (** [before H]. *)
+
   val after : ident -> move_location
+  (** [after H]. *)
 
   (** {3 Inversion kinds} *)
 
