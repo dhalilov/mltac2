@@ -1196,11 +1196,16 @@ module Syntax : sig
 
       These patterns can be used when the hypothesis is an equality. *)
 
-  val ( --> ) : intropattern
+  type orientation = private intropattern
+  (** Type of rewrite orientiation.
+      Since the symbol is used as an intropattern as well, we use a private type equality
+      so that it can be used in both contexts. *)
+
+  val ( --> ) : orientation
   (** Replaces the RHS of the hypothesis with the LHS in the conclusion of the
       goal. *)
 
-  val ( <-- ) : intropattern
+  val ( <-- ) : orientation
   (** Replaces the LHS of the hypothesis with the RHS in the conclusion of the
       goal. *)
 
@@ -1294,6 +1299,45 @@ module Syntax : sig
 
   val full_clear : inversion_kind
   (** Behave like Ltac's [inversion_clear]. *)
+
+  (** {3 Rewrites} *)
+
+  type multiplicity
+  (** Specifies the number of rewrites to perform. *)
+
+  val exactly : int -> multiplicity
+  (** [exactly n] performs a rewrite exactly [n] times. *)
+
+  val at_most : int -> multiplicity
+  (** [at_most n] performs a rewrite at most [n] times ([?n] in Ltac). *)
+
+  val star : multiplicity
+  (** [star] performs a rewrite as many times as possible, possibly zero. *)
+
+  val plus : multiplicity
+  (** [plus] performs a rewrite as many times as possible and at least once. *)
+
+  type rewriting
+  (** Types of rewriting for the {!val:Std.rewrite} tactic. *)
+
+  val rewriting : ?orient:orientation -> ?n:multiplicity -> ?bindings:Tac2types.bindings -> constr -> rewriting
+  (** [rewriting ?orient e ?n ?bindings] rewrites using equality or equivalence
+      [e].
+
+      @param e
+        Equality or equivalence to use, of the form [forall …, term₁ = term₂]
+        or [forall …, term₁ EQ term₂] for some equivalence relation [EQ].
+
+      @param orient (default = [(-->)])
+        If equal to [(-->)], rewrites [term₁] into [term₂].
+        If equal to [(<--)], rewrites [term₂] into [term₁].
+
+      @param n (default = [exactly 1])
+        Number of rewrites to perform.
+
+      @param bindings (default = [NoBindings])
+        Bindings to use.
+   *)
 end
 
 (** {2 Standard tactics} *)
@@ -1306,7 +1350,6 @@ module Std : sig
   type reference = GlobRef.t
   type destruction_arg = Tac2types.destruction_arg
   type induction_clause = Tac2types.induction_clause
-  type rewriting = Tac2types.rewriting
 
   (** {3 Applying theorems} *)
 
@@ -1640,15 +1683,15 @@ module Std : sig
       @see <https://rocq-prover.org/doc/master/refman/proofs/writing-proofs/equality.html#rocq:tacn.rewrite> Reference manual
    *)
 
-  val setoid_rewrite : ?ltr:bool -> ?in_hyp:ident -> constr_with_bindings -> int occurrences -> unit tactic
-  (** [setoid_rewrite ?ltr ?in_hyp c occs] rewrites an occurrence of the term
+  val setoid_rewrite : ?orient:orientation -> ?in_hyp:ident -> constr_with_bindings -> int occurrences -> unit tactic
+  (** [setoid_rewrite ?orient ?in_hyp c occs] rewrites an occurrence of the term
       matched by [c] in the goal or the specified hypothesis using a setoid
       equality. Unlike {!val:rewrite}, this tactic works with relations
       registered through the generalized rewriting framework.
 
-      @param ltr (default = [true])
-        The rewrite orientation. If [true] (left-to-right), rewrites from
-        the LHS to the RHS of the equation. If [false], rewrites right-to-left.
+      @param orient (default = [(-->)])
+        The rewrite orientation. If [(-->)] (left-to-right), rewrites from
+        the LHS to the RHS of the equation. If [(<--)], rewrites right-to-left.
 
       @param in_hyp (default = [None])
         The name of the hypothesis in which to rewrite. If not provided,

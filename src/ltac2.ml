@@ -1026,6 +1026,8 @@ module Syntax = struct
 
   (** {4 Equality patterns} *)
 
+  type orientation = intropattern (* used by the signature *)
+
   let ( --> ) = IntroAction (IntroRewrite true)
   let ( <-- ) = IntroAction (IntroRewrite false)
   let ( @= ) pats = IntroAction (IntroInjection pats)
@@ -1094,6 +1096,20 @@ module Syntax = struct
   let simple: inversion_kind = SimpleInversion
   let full: inversion_kind = FullInversion
   let full_clear: inversion_kind = FullInversionClear
+
+  (** {3 Rewriting} *)
+
+  type multiplicity = Equality.multi
+
+  let exactly n = Equality.Precisely n
+  let at_most n = Equality.UpTo n
+  let star = Equality.RepeatStar
+  let plus = Equality.RepeatPlus
+
+  type rewriting = Tac2types.rewriting
+
+  let rewriting ?orient ?(n = exactly 1) ?(bindings = NoBindings) c =
+    Option.map ((=) (-->)) orient, n, return (c, bindings)
 end
 
 (** {2 Standard tactics} *)
@@ -1104,7 +1120,6 @@ module Ltac2Std = struct
   type reference = GlobRef.t
   type destruction_arg = Tac2types.destruction_arg
   type induction_clause = Tac2types.induction_clause
-  type rewriting = Tac2types.rewriting
 
   let intro ?name ?(where = Logic.MoveLast) () =
     Tactics.intro_move name where
@@ -1245,9 +1260,9 @@ module Ltac2Std = struct
     let by = Option.map (thunk' Tac2ffi.unit) by in
     Tac2tactics.rewrite e rewrites where by
 
-  let setoid_rewrite ?(ltr = true) ?in_hyp t where =
+  let setoid_rewrite ?(orient = Syntax.(-->)) ?in_hyp t where =
     let where = Syntax.make_occurrences where in
-    Tac2tactics.setoid_rewrite ltr (return t) where in_hyp
+    Tac2tactics.setoid_rewrite (orient = Syntax.(-->)) (return t) where in_hyp
 
   let inversion ?(kind = Inv.FullInversion) ?as_pattern ?in_hyps arg =
     Tac2tactics.inversion kind arg as_pattern in_hyps
