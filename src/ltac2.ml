@@ -982,10 +982,7 @@ end
 
     We provide custom syntax for easily inputting tactic arguments, mirorring
     Ltac2 notations. In addition to being easier to type, controlling the input
-    syntax allows us to provide stability by decoupling it from {!module:Tac2types}.
-
-    Note: to provide user stability, we can only define a new frontend for argument values;
-    for return types, we provide extensible versions of those defined in {!module:Tac2types}.
+    syntax guarantees forward stability by decoupling it from {!module:Tac2types}.
  *)
 
 module Syntax = struct
