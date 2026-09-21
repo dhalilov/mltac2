@@ -1154,6 +1154,31 @@ module Syntax : sig
   val named_hyp : ident -> hypothesis
   val nth_hyp : int -> hypothesis
 
+  (** {3 Bindings}
+
+      @see <https://rocq-prover.org/doc/master/refman/proof-engine/tactics.html#bindings>
+        Reference manual, "Bindings"
+   *)
+
+  type bindings
+  (** Type of term bindings. *)
+
+  type constr_with_bindings
+  (** A term with {!type:bindings}. *)
+
+  val no_bindings : bindings
+  (** [no_bindings] is an empty list of bindings. *)
+
+  val implicitly : constr list -> bindings
+  (** [implicitly [t₁; …; tₙ]] binds free variables in left-to-right order of their
+      first appearance in the relevant term. *)
+
+  val explicitly : (hypothesis * constr) list -> bindings
+  (** [explicitly [(h₁, t₁); …; (hₙ, tₙ)]] binds variables [hᵢ] to [tᵢ]. *)
+
+  val with_bindings : ?bindings:bindings -> constr -> constr_with_bindings
+  (** [with_bindings t ?bindings] adds [bindings] to [t]. *)
+
   (** {3 Intropatterns} *)
 
   type intropattern
@@ -1328,7 +1353,7 @@ module Syntax : sig
   type rewriting
   (** Types of rewriting for the {!val:Std.rewrite} tactic. *)
 
-  val rewriting : ?orient:orientation -> ?n:multiplicity -> ?bindings:Tac2types.bindings -> constr -> rewriting
+  val rewriting : ?orient:orientation -> ?n:multiplicity -> ?bindings:bindings -> constr -> rewriting
   (** [rewriting ?orient e ?n ?bindings] rewrites using equality or equivalence
       [e].
 
@@ -1343,7 +1368,7 @@ module Syntax : sig
       @param n (default = [exactly 1])
         Number of rewrites to perform.
 
-      @param bindings (default = [NoBindings])
+      @param bindings (default = [no_bindings])
         Bindings to use.
    *)
 end
@@ -1353,8 +1378,6 @@ end
 module Std : sig
   open Syntax
 
-  type bindings = Tac2types.bindings
-  type constr_with_bindings = Tac2types.constr_with_bindings
   type reference = GlobRef.t
   type destruction_arg = Tac2types.destruction_arg
   type induction_clause = Tac2types.induction_clause

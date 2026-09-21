@@ -993,6 +993,21 @@ module Syntax = struct
   let named_hyp h = NamedHyp (CAst.make h)
   let nth_hyp n = AnonHyp n
 
+  (** {3 Bindings}
+
+      @see <https://rocq-prover.org/doc/master/refman/proof-engine/tactics.html#bindings>
+        Reference manual, "Bindings"
+   *)
+
+  type bindings = Tac2types.bindings
+  type constr_with_bindings = Tac2types.constr_with_bindings
+
+  let no_bindings = NoBindings
+  let explicitly l = ExplicitBindings l
+  let implicitly l = ImplicitBindings l
+
+  let with_bindings ?(bindings = no_bindings) c = c, bindings
+
   (** {3 Intropatterns} *)
 
   type intropattern = Tac2types.intro_pattern
@@ -1105,15 +1120,13 @@ module Syntax = struct
 
   type rewriting = Tac2types.rewriting
 
-  let rewriting ?orient ?(n = exactly 1) ?(bindings = NoBindings) c =
+  let rewriting ?orient ?(n = exactly 1) ?(bindings = no_bindings) c =
     Option.map ((=) (-->)) orient, n, return (c, bindings)
 end
 
 (** {2 Standard tactics} *)
 
 module Ltac2Std = struct
-  type bindings = Tac2types.bindings
-  type constr_with_bindings = Tac2types.constr_with_bindings
   type reference = GlobRef.t
   type destruction_arg = Tac2types.destruction_arg
   type induction_clause = Tac2types.induction_clause
@@ -1278,8 +1291,8 @@ module Ltac2Std = struct
 
   let cut = Tactics.cut
 
-  let left ?(e = false) ?(bindings = NoBindings) () = Tac2tactics.left_with_bindings e bindings
-  let right ?(e = false) ?(bindings = NoBindings) () = Tac2tactics.right_with_bindings e bindings
+  let left ?(e = false) ?(bindings = Syntax.no_bindings) () = Tac2tactics.left_with_bindings e bindings
+  let right ?(e = false) ?(bindings = Syntax.no_bindings) () = Tac2tactics.right_with_bindings e bindings
 
   let intros_until = Tactics.intros_until
 
@@ -1287,14 +1300,14 @@ module Ltac2Std = struct
   let vm_cast_no_check = Tactics.vm_cast_no_check
   let native_cast_no_check = Tactics.native_cast_no_check
 
-  let constructor ?(e = false) ?n ?(bindings = NoBindings) () =
+  let constructor ?(e = false) ?n ?(bindings = Syntax.no_bindings) () =
     match n with
     | Some n -> Tac2tactics.constructor_tac e None n bindings
     | None -> Tactics.any_constructor e None
 
   let symmetry ?(where = default_on_conclusion) () = Tac2tactics.symmetry where
 
-  let split ?(e = false) ?(bindings = NoBindings) () = Tac2tactics.split_with_bindings e bindings
+  let split ?(e = false) ?(bindings = Syntax.no_bindings) () = Tac2tactics.split_with_bindings e bindings
   let rename = Tactics.rename_hyp
 
   let revert = Generalize.revert
