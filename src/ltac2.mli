@@ -1181,39 +1181,48 @@ module Syntax : sig
 
   (** {3 Intropatterns} *)
 
-  type intropattern
+  type +'a intropattern
   (** An intropattern lets you specify the name to assign to variables and
-      hypotheses introduced by tactics. *)
+      hypotheses introduced by tactics.
+
+      The type variable is used for statically distinguishing subtypes of
+      intropatterns.
+   *)
+
+  type any = [ `Any ]
 
   (** {4 Naming patterns} *)
 
-  type naming_intropattern = private intropattern
+  type naming = [ `Naming ]
   (** Special type of intropatterns used for naming hypotheses (e.g. in [eqn:]
       clauses). *)
 
-  val name : ident -> naming_intropattern
+  val name : ident -> [> naming] intropattern
   (** [name ident] uses the specified name. *)
 
-  val ( ?? ) : naming_intropattern
+  val ( ?? ) : [> naming ] intropattern
   (** [(??)] lets Rocq generate a fresh name. *)
 
-  val ( ?: ) : ident -> naming_intropattern
+  val ( ?: ) : ident -> [> naming] intropattern
   (** [?:ident] lets Rocq generate a fresh name that begins with [ident]. *)
 
-  val __ : intropattern
+  val __ : [> any] intropattern
   (** Wildcard intropattern that discards the matched pattern (unless it is required
       by another hypothesis). *)
 
   (** {4 Splitting patterns} *)
 
-  val ( & ) : intropattern -> intropattern -> intropattern
+  type or_and = [ `Or_and ]
+  (** Special type of intropatterns sometimes used in [as] clauses. *)
+
+  val ( & ) : _ intropattern -> _ intropattern -> [> or_and] intropattern
   (** [p1 & p2] splits a hypothesis of the form [A /\ B] into [p1: A] and [p2: B].
       Right-associative. *)
 
-  val and_pattern : intropattern list -> intropattern
+  val and_pattern : 'a intropattern list -> [> or_and] intropattern
   (** [and_pattern [p₁; …; pₙ]] is equivalent to [p₁ & … & pₙ]. *)
 
-  val or_pattern : intropattern list list -> intropattern
+  val or_pattern : 'a intropattern list list -> [> or_and] intropattern
   (** [or_pattern [p₁; …; pₙ]] splits a hypothesis of the form [A₁ \/ … \/ Aₙ]
       into [n] subgoals, where the [i]-th subgoal will have [pᵢ: Aᵢ]. *)
 
@@ -1221,33 +1230,33 @@ module Syntax : sig
 
       These patterns can be used when the hypothesis is an equality. *)
 
-  type orientation = private intropattern
+  type orientation = [ `Orientation ]
   (** Type of rewrite orientiation.
       Since the symbol is used as an intropattern as well, we use a private type equality
       so that it can be used in both contexts. *)
 
-  val ( --> ) : orientation
+  val ( --> ) : [> orientation] intropattern
   (** Replaces the RHS of the hypothesis with the LHS in the conclusion of the
       goal. *)
 
-  val ( <-- ) : orientation
+  val ( <-- ) : [> orientation] intropattern
   (** Replaces the LHS of the hypothesis with the RHS in the conclusion of the
       goal. *)
 
-  val ( @= ) : intropattern list -> intropattern
+  val ( @= ) : _ intropattern list -> [> any] intropattern
   (** Applies either {!val:Std.injection} or {!val:Std.discriminate}. *)
 
   (** {4 Other patterns} *)
 
-  val ( @* ) : intropattern
+  val ( @* ) : _ intropattern
   (** Introduces one or more dependent premises from the result until there are
       no more. *)
 
-  val ( @** ) : intropattern
+  val ( @** ) : _ intropattern
   (** Introduces one or more dependent or non-dependent premises from the result
       until there are no more premises. *)
 
-  val ( % ) : intropattern -> constr -> intropattern
+  val ( % ) : _ intropattern -> constr -> [> any] intropattern
   (** [pattern%term] first applies [term] with the {!val:Std.apply} tactic on
       the hypothesis to be introduced, then it uses [pattern]. *)
 
@@ -1353,7 +1362,7 @@ module Syntax : sig
   type rewriting
   (** Types of rewriting for the {!val:Std.rewrite} tactic. *)
 
-  val rewriting : ?orient:orientation -> ?n:multiplicity -> ?bindings:bindings -> constr -> rewriting
+  val rewriting : ?orient:orientation intropattern -> ?n:multiplicity -> ?bindings:bindings -> constr -> rewriting
   (** [rewriting ?orient e ?n ?bindings] rewrites using equality or equivalence
       [e].
 
@@ -1397,7 +1406,7 @@ module Std : sig
       @see <https://rocq-prover.org/doc/master/refman/proof-engine/tactics.html#rocq:tacn.assumption> Reference manual
    *)
 
-  val apply : ?e:bool -> ?in_hyp_as:(ident * intropattern option) -> constr_with_bindings list -> unit tactic
+  val apply : ?e:bool -> ?in_hyp_as:(ident * _ intropattern option) -> constr_with_bindings list -> unit tactic
   (** [apply ?e ts ?in_hyp_as] uses unification to match the type of each [t] with the goal
       (to do backward reasoning) or with a hypothesis (to do forward reasoning).
       Specifying multiple {!type:constr_with_bindings} is equivalent to giving each one
@@ -1431,7 +1440,7 @@ module Std : sig
 
       @see <https://rocq-prover.org/doc/master/refman/proof-engine/tactics.html#rocq:tacn.intro> Reference manual *)
 
-  val intros : ?e:bool -> ?patterns:intropattern list -> unit -> unit tactic
+  val intros : ?e:bool -> ?patterns:_ intropattern list -> unit -> unit tactic
   (** [intros ?e ?patterns ()] introduces a list of new variables in the context
       using the [patterns]. If [patterns] is not specified, the tactic
       introduces items until it reaches the head constant; it never fails and
@@ -1515,7 +1524,7 @@ module Std : sig
   val remember :
     ?e:bool ->
     ?as_name:ident ->
-    ?eqn:naming_intropattern ->
+    ?eqn:naming intropattern ->
     ?where:clause ->
     constr ->
     unit tactic
@@ -1546,7 +1555,7 @@ module Std : sig
 
   (** {3 Controlling the proof flow} *)
 
-  val assert_ : ?as_pattern:intropattern -> ?by:unit tactic -> constr -> unit tactic
+  val assert_ : ?as_pattern:_ intropattern -> ?by:unit tactic -> constr -> unit tactic
   (** [assert_ assertion] adds a new hypothesis to the current subgoal and a new subgoal
       before it to prove the hypothesis.
 
@@ -1556,7 +1565,7 @@ module Std : sig
       @see <https://rocq-prover.org/doc/master/refman/proof-engine/tactics.html#rocq:tacn.assert> Reference manual
    *)
 
-  val enough : ?as_pattern:intropattern -> ?by:unit tactic -> constr -> unit tactic
+  val enough : ?as_pattern:_ intropattern -> ?by:unit tactic -> constr -> unit tactic
   (** [enough t ?as_pattern ?by] adds a new hypothesis to the current subgoal and a new subgoal
       after it to prove the hypothesis.
 
@@ -1572,7 +1581,7 @@ module Std : sig
 
       @see <https://rocq-prover.org/doc/master/refman/proof-engine/tactics.html#rocq:tacn.cut> Reference manual *)
 
-  val specialize : ?as_pattern:intropattern -> constr_with_bindings -> unit tactic
+  val specialize : ?as_pattern:_ intropattern -> constr_with_bindings -> unit tactic
   (** [specialize t ?as_pattern] specializes [t] (typically a hypothesis or
       lemma) by applying arguments to it.
 
@@ -1714,7 +1723,7 @@ module Std : sig
       @see <https://rocq-prover.org/doc/master/refman/proofs/writing-proofs/equality.html#rocq:tacn.rewrite> Reference manual
    *)
 
-  val setoid_rewrite : ?orient:orientation -> ?in_hyp:ident -> constr_with_bindings -> int occurrences -> unit tactic
+  val setoid_rewrite : ?orient:orientation intropattern -> ?in_hyp:ident -> constr_with_bindings -> int occurrences -> unit tactic
   (** [setoid_rewrite ?orient ?in_hyp c occs] rewrites an occurrence of the term
       matched by [c] in the goal or the specified hypothesis using a setoid
       equality. Unlike {!val:rewrite}, this tactic works with relations
@@ -2039,7 +2048,7 @@ module Std : sig
 
       @see <https://rocq-prover.org/doc/master/refman/proofs/writing-proofs/reasoning-inductives.html#rocq:tacn.discriminate> Reference manual *)
 
-  val injection : ?e:bool -> ?arg:destruction_arg -> ?as_patterns:intropattern list -> unit -> unit tactic
+  val injection : ?e:bool -> ?arg:destruction_arg -> ?as_patterns:_ intropattern list -> unit -> unit tactic
   (** [injection () ?e ?ipat ?arg] exploits the property that constructors of
       inductive types are injective, i.e. that if [c] is a constructor of an inductive
       type and [c t1 = c t2] then [t1 = t2] are equal too.
@@ -2060,7 +2069,7 @@ module Std : sig
 
   val inversion :
     ?kind:inversion_kind ->
-    ?as_pattern:intropattern ->
+    ?as_pattern:_ intropattern ->
     ?in_hyps:ident list ->
     destruction_arg ->
     unit tactic
