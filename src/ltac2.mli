@@ -1152,7 +1152,10 @@ module Syntax : sig
   (** Type of hypothesis target. *)
 
   val named_hyp : ident -> hypothesis
+  (** [named_hyp h] selects hypothesis [h]. *)
+
   val nth_hyp : int -> hypothesis
+  (** [nth_hyp n] selects the [n]-th hypothesis. *)
 
   (** {3 Bindings}
 
