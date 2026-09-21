@@ -1380,6 +1380,34 @@ module Syntax : sig
       @param bindings (default = [no_bindings])
         Bindings to use.
    *)
+
+  (** {3 Induction clauses}
+
+      @see <https://rocq-prover.org/doc/master/refman/proofs/writing-proofs/reasoning-inductives.html#case-analysis>
+        Reference manual, "Case analysis"
+   *)
+
+  type induction_arg
+  (** @see <https://rocq-prover.org/doc/master/refman/proofs/writing-proofs/reasoning-inductives.html#grammar-token-induction_arg>
+        Reference manual, induction_arg *)
+
+  val on_constr : ?bindings:bindings -> constr -> induction_arg
+  (** [on_constr t ?bindings] performs induction/case analysis on [t]. *)
+
+  val on_hyp : hypothesis -> induction_arg
+  (** [on_hyp h] performs induction/case analysis on hypothesis [h]. *)
+
+  type induction_clause
+  (** @see <https://rocq-prover.org/doc/master/refman/proofs/writing-proofs/reasoning-inductives.html#grammar-token-induction_clause>
+        Reference manual, induction_clause *)
+
+  val induct_on :
+    ?as_pattern:or_and intropattern ->
+    ?eqn:naming intropattern ->
+    ?where:clause ->
+    induction_arg ->
+    induction_clause
+  (** [induct_on arg ?as_pattern ?eqn ?where] describes an induction clause. *)
 end
 
 (** {2 Standard tactics} *)
@@ -1388,8 +1416,6 @@ module Std : sig
   open Syntax
 
   type reference = GlobRef.t
-  type destruction_arg = Tac2types.destruction_arg
-  type induction_clause = Tac2types.induction_clause
 
   (** {3 Applying theorems} *)
 
@@ -2033,7 +2059,7 @@ module Std : sig
 
   (** {4 Equality of inductive types} *)
 
-  val discriminate : ?e:bool -> ?arg:destruction_arg -> unit -> unit tactic
+  val discriminate : ?e:bool -> ?arg:induction_arg -> unit -> unit tactic
   (** [discriminate ?e ?arg ()] proves the current goal by discriminating an
       equality between two constructors of the same inductive type. The
       argument [arg] specifies which hypothesis or term to discriminate.
@@ -2043,12 +2069,12 @@ module Std : sig
         variables instead of failing.
 
       @param arg (default = [None])
-        The destruction argument specifying what to discriminate. If not
+        The induction argument specifying what to discriminate. If not
         provided, the current goal's hypotheses are checked.
 
       @see <https://rocq-prover.org/doc/master/refman/proofs/writing-proofs/reasoning-inductives.html#rocq:tacn.discriminate> Reference manual *)
 
-  val injection : ?e:bool -> ?arg:destruction_arg -> ?as_patterns:_ intropattern list -> unit -> unit tactic
+  val injection : ?e:bool -> ?arg:induction_arg -> ?as_patterns:_ intropattern list -> unit -> unit tactic
   (** [injection () ?e ?ipat ?arg] exploits the property that constructors of
       inductive types are injective, i.e. that if [c] is a constructor of an inductive
       type and [c t1 = c t2] then [t1 = t2] are equal too.
@@ -2058,7 +2084,7 @@ module Std : sig
         variables instead of failing.
 
       @param arg (default = [None])
-        The destruction argument specifying what to inject. If not
+        The induction argument specifying what to inject. If not
         provided, the current goal's hypotheses are used.
 
       @param as_patterns (default = [None])
@@ -2071,7 +2097,7 @@ module Std : sig
     ?kind:inversion_kind ->
     ?as_pattern:_ intropattern ->
     ?in_hyps:ident list ->
-    destruction_arg ->
+    induction_arg ->
     unit tactic
   (** [inversion ?kind arg ?as_pattern ?ids] performs inversion on the given term
       [arg] using the specified [kind] of inversion. Inversion generates

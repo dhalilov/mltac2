@@ -1125,14 +1125,44 @@ module Syntax = struct
 
   let rewriting ?orient ?(n = exactly 1) ?(bindings = no_bindings) c =
     Option.map ((=) (-->)) orient, n, return (c, bindings)
+
+  (** {3 Induction clauses}
+
+      @see <https://rocq-prover.org/doc/master/refman/proofs/writing-proofs/reasoning-inductives.html#case-analysis>
+        Reference manual, "Case analysis"
+   *)
+
+  type induction_arg = Tac2types.destruction_arg
+
+  let on_constr ?(bindings = no_bindings) t =
+    ElimOnConstr (return (t, bindings))
+
+  let on_hyp = function
+    | NamedHyp h -> ElimOnIdent h.CAst.v
+    | AnonHyp n -> ElimOnAnonHyp n
+
+  type induction_clause = Tac2types.induction_clause
+
+  let induct_on ?as_pattern ?eqn ?where on =
+    let as_pattern =
+      match as_pattern with
+      | Some (IntroAction (IntroOrAndPattern x)) -> Some x
+      | Some _ -> assert false (* By static type *)
+      | None -> None
+    in
+    let eqn =
+      match eqn with
+      | Some (IntroNaming x) -> Some x
+      | Some _ -> assert false (* By static type *)
+      | None -> None
+    in
+    on, eqn, as_pattern, where
 end
 
 (** {2 Standard tactics} *)
 
 module Ltac2Std = struct
   type reference = GlobRef.t
-  type destruction_arg = Tac2types.destruction_arg
-  type induction_clause = Tac2types.induction_clause
 
   let intro ?name ?(where = Logic.MoveLast) () =
     Tactics.intro_move name where
