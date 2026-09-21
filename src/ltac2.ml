@@ -1203,7 +1203,7 @@ module Ltac2Std = struct
     Proofview.tclEVARMAP >>= fun sigma ->
     Tac2tactics.letin_pat_tac e None name (Some sigma, c) where
 
-  let remember ?(e = false) ?as_name ?(eqn = Syntax.__) ?(where = default_everywhere) c =
+  let remember ?(e = false) ?as_name ?(eqn = Syntax.(??)) ?(where = default_everywhere) c =
     (* By the invariants on [naming_intropattern], it must be [IntroNaming]. *)
     let eqn = match eqn with IntroNaming eqn -> eqn | _ -> assert false in
     let as_name = match as_name with Some id -> Name id | None -> Anonymous in

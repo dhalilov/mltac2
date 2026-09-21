@@ -1578,7 +1578,7 @@ module Std : sig
         If [e] is [true], generates existential variables for uninstantiated
         variables instead of failing.
 
-      @param eqn (default = [IntroAnonymous])
+      @param eqn (default = [(??)])
         Specifies how to name the introduced equation.
 
       @see <https://rocq-prover.org/doc/master/refman/proof-engine/tactics.html#rocq:tacn.remember> Reference manual
