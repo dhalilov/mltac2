@@ -1011,7 +1011,7 @@ module Syntax = struct
   (** {3 Intropatterns} *)
 
   type +'a intropattern = Tac2types.intro_pattern
-  type any = [ `Any ]
+  type other = [ `Other ]
 
   (** {4 Naming patterns} *)
 

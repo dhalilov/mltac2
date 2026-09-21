@@ -1192,7 +1192,8 @@ module Syntax : sig
       intropatterns.
    *)
 
-  type any = [ `Any ]
+  type other = [ `Other ]
+  (** Default intropattern class. *)
 
   (** {4 Naming patterns} *)
 
@@ -1209,7 +1210,7 @@ module Syntax : sig
   val ( ?: ) : ident -> [> naming] intropattern
   (** [?:ident] lets Rocq generate a fresh name that begins with [ident]. *)
 
-  val __ : [> any] intropattern
+  val __ : [> other] intropattern
   (** Wildcard intropattern that discards the matched pattern (unless it is required
       by another hypothesis). *)
 
@@ -1246,20 +1247,20 @@ module Syntax : sig
   (** Replaces the LHS of the hypothesis with the RHS in the conclusion of the
       goal. *)
 
-  val ( @= ) : _ intropattern list -> [> any] intropattern
+  val ( @= ) : _ intropattern list -> [> other] intropattern
   (** Applies either {!val:Std.injection} or {!val:Std.discriminate}. *)
 
   (** {4 Other patterns} *)
 
-  val ( @* ) : _ intropattern
+  val ( @* ) : [> other] intropattern
   (** Introduces one or more dependent premises from the result until there are
       no more. *)
 
-  val ( @** ) : _ intropattern
+  val ( @** ) : [> other] intropattern
   (** Introduces one or more dependent or non-dependent premises from the result
       until there are no more premises. *)
 
-  val ( % ) : _ intropattern -> constr -> [> any] intropattern
+  val ( % ) : _ intropattern -> constr -> [> other] intropattern
   (** [pattern%term] first applies [term] with the {!val:Std.apply} tactic on
       the hypothesis to be introduced, then it uses [pattern]. *)
 
