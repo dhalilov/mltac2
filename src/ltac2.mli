@@ -1235,9 +1235,7 @@ module Syntax : sig
       These patterns can be used when the hypothesis is an equality. *)
 
   type orientation = [ `Orientation ]
-  (** Type of rewrite orientiation.
-      Since the symbol is used as an intropattern as well, we use a private type equality
-      so that it can be used in both contexts. *)
+  (** Type of intropatterns that are used as rewrite orientations. *)
 
   val ( --> ) : [> orientation] intropattern
   (** Replaces the RHS of the hypothesis with the LHS in the conclusion of the
