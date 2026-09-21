@@ -1192,14 +1192,32 @@ module Syntax : sig
       intropatterns.
    *)
 
+  type naming = [ `Naming ]
+  (** Tag for intropatterns used for naming hypotheses (e.g. in [eqn:]
+      clauses). *)
+
+  type or_and = [ `Or_and ]
+  (** Tag for intropatterns that split conjunctions/disjunctions, sometimes used
+      in [as] clauses. *)
+
+  type orientation = [ `Orientation ]
+  (** Tag for intropatterns that are used as rewrite orientations (i.e. [(-->)] and [(<--)]). *)
+
+  type equality = [ orientation | `Equality ]
+  (** Tag for equality intropatterns. *)
+
+  type simple = [ naming | or_and | equality ]
+  (** Tag for simple intropatterns. *)
+
   type other = [ `Other ]
-  (** Default intropattern class. *)
+  (** Tag for other intropatterns. *)
+
+  type any = [ simple | other ]
+  (** Top tag for all intropatterns.
+
+      Useful in error messages. *)
 
   (** {4 Naming patterns} *)
-
-  type naming = [ `Naming ]
-  (** Special type of intropatterns used for naming hypotheses (e.g. in [eqn:]
-      clauses). *)
 
   val name : ident -> [> naming] intropattern
   (** [name ident] uses the specified name. *)
@@ -1210,32 +1228,22 @@ module Syntax : sig
   val ( ?: ) : ident -> [> naming] intropattern
   (** [?:ident] lets Rocq generate a fresh name that begins with [ident]. *)
 
-  val __ : [> other] intropattern
-  (** Wildcard intropattern that discards the matched pattern (unless it is required
-      by another hypothesis). *)
-
   (** {4 Splitting patterns} *)
 
-  type or_and = [ `Or_and ]
-  (** Special type of intropatterns sometimes used in [as] clauses. *)
-
-  val ( & ) : _ intropattern -> _ intropattern -> [> or_and] intropattern
+  val ( & ) : simple intropattern -> simple intropattern -> [> or_and] intropattern
   (** [p1 & p2] splits a hypothesis of the form [A /\ B] into [p1: A] and [p2: B].
       Right-associative. *)
 
-  val and_pattern : 'a intropattern list -> [> or_and] intropattern
+  val and_pattern : simple intropattern list -> [> or_and] intropattern
   (** [and_pattern [p₁; …; pₙ]] is equivalent to [p₁ & … & pₙ]. *)
 
-  val or_pattern : 'a intropattern list list -> [> or_and] intropattern
+  val or_pattern : any intropattern list list -> [> or_and] intropattern
   (** [or_pattern [p₁; …; pₙ]] splits a hypothesis of the form [A₁ \/ … \/ Aₙ]
       into [n] subgoals, where the [i]-th subgoal will have [pᵢ: Aᵢ]. *)
 
   (** {4 Equality patterns}
 
       These patterns can be used when the hypothesis is an equality. *)
-
-  type orientation = [ `Orientation ]
-  (** Type of intropatterns that are used as rewrite orientations. *)
 
   val ( --> ) : [> orientation] intropattern
   (** Replaces the RHS of the hypothesis with the LHS in the conclusion of the
@@ -1245,10 +1253,14 @@ module Syntax : sig
   (** Replaces the LHS of the hypothesis with the RHS in the conclusion of the
       goal. *)
 
-  val ( @= ) : _ intropattern list -> [> other] intropattern
+  val ( @= ) : any intropattern list -> [> equality] intropattern
   (** Applies either {!val:Std.injection} or {!val:Std.discriminate}. *)
 
   (** {4 Other patterns} *)
+
+  val __ : [> simple] intropattern
+  (** Wildcard intropattern that discards the matched pattern (unless it is required
+      by another hypothesis). *)
 
   val ( @* ) : [> other] intropattern
   (** Introduces one or more dependent premises from the result until there are
@@ -1258,7 +1270,7 @@ module Syntax : sig
   (** Introduces one or more dependent or non-dependent premises from the result
       until there are no more premises. *)
 
-  val ( % ) : _ intropattern -> constr -> [> other] intropattern
+  val ( % ) : simple intropattern -> constr -> [> simple] intropattern
   (** [pattern%term] first applies [term] with the {!val:Std.apply} tactic on
       the hypothesis to be introduced, then it uses [pattern]. *)
 

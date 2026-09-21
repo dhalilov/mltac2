@@ -1011,11 +1011,16 @@ module Syntax = struct
   (** {3 Intropatterns} *)
 
   type +'a intropattern = Tac2types.intro_pattern
-  type other = [ `Other ]
-
-  (** {4 Naming patterns} *)
 
   type naming = [ `Naming ]
+  type or_and = [ `Or_and ]
+  type orientation = [ `Orientation ]
+  type equality = [ orientation | `Equality ]
+  type simple = [ naming | or_and | equality ]
+  type other = [ `Other ]
+  type any = [ simple | other ]
+
+  (** {4 Naming patterns} *)
 
   let name h = IntroNaming (IntroIdentifier h)
   let fresh h = IntroNaming (IntroFresh h)
@@ -1024,8 +1029,6 @@ module Syntax = struct
   let __ = IntroAction IntroWildcard
 
   (** {4 Splitting patterns} *)
-
-  type or_and = [ `Or_and ]
 
   (** Infix syntax for and-intropatterns.
       Right-associative per OCaml's associativity rules. *)
@@ -1040,8 +1043,6 @@ module Syntax = struct
   let or_pattern patterns = IntroAction (IntroOrAndPattern (IntroOrPattern patterns))
 
   (** {4 Equality patterns} *)
-
-  type orientation = [ `Orientation ]
 
   let ( --> ) = IntroAction (IntroRewrite true)
   let ( <-- ) = IntroAction (IntroRewrite false)
