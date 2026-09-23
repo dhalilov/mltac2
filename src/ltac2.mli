@@ -2034,7 +2034,7 @@ end
 
 module Unification : sig
   type conv_flag = Evd.conv_pb
-  (** Controls if cumulativity [Prop <= Set <= Type 1 <= … <= Type i <= …] is
+  (** Controls if cumulativity [Prop ≤ Set ≤ Type 1 ≤ … ≤ Type i ≤ …] is
       used for conversion. *)
 
   val conv : Environ.env -> Evd.evar_map -> conv_flag -> TransparentState.t -> constr -> constr -> Evd.evar_map option
