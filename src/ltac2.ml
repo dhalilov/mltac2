@@ -988,10 +988,15 @@ end
 module Syntax = struct
   (** {3 Hypotheses} *)
 
-  type hypothesis = Tac2types.quantified_hypothesis
+  type hypothesis = .. (** Extensible version of [Tac2types.quantified_hypothesis]. *)
+  type hypothesis +=
+     | Named_hyp of Id.t
+     | Nth_hyp of int
 
-  let named_hyp h = NamedHyp (CAst.make h)
-  let nth_hyp n = AnonHyp n
+  let mk_hypothesis = function
+    | Named_hyp h -> Tac2types.NamedHyp (CAst.make h)
+    | Nth_hyp n -> Tac2types.AnonHyp n
+    | _ -> assert false
 
   (** {3 Bindings}
 
@@ -999,14 +1004,22 @@ module Syntax = struct
         Reference manual, "Bindings"
    *)
 
-  type bindings = Tac2types.bindings
+  type bindings = .. (** Extensible version of [Tac2types.bindings]. *)
+  type bindings +=
+     | No_bindings
+     | Implicit of EConstr.t list
+     | Explicit of (hypothesis * EConstr.t) list
+
+  let mk_bindings = function
+    | No_bindings -> Tac2types.NoBindings
+    | Implicit l -> Tac2types.ImplicitBindings l
+    | Explicit l -> Tac2types.ExplicitBindings (List.map (fun (h, c) -> mk_hypothesis h, c) l)
+    | _ -> assert false
+
   type constr_with_bindings = Tac2types.constr_with_bindings
 
-  let no_bindings = NoBindings
-  let explicitly l = ExplicitBindings l
-  let implicitly l = ImplicitBindings l
-
-  let with_bindings ?(bindings = no_bindings) c = c, bindings
+  let with_bindings ?(bindings = No_bindings) c =
+    c, mk_bindings bindings
 
   (** {3 Intropatterns} *)
 
@@ -1056,74 +1069,101 @@ module Syntax = struct
 
   (** {3 Occurrences} *)
 
-  type _ occurrences =
+  type _ occurrences = ..
+  type _ occurrences +=
     | At : 'a list -> 'a occurrences
     | Everywhere : 'a occurrences
-    | EverywhereBut : int list -> int occurrences
+    | Everywhere_but : int list -> int occurrences
     | Nowhere : 'a occurrences
 
-  let at l = At l
-  let everywhere = Everywhere
-  let everywhere_but l = EverywhereBut l
-  let nowhere = Nowhere
-
-  let make_occurrences = function
+  let mk_occurrences = function
     | At l -> OnlyOccurrences l
     | Everywhere -> AllOccurrences
-    | EverywhereBut l -> AllOccurrencesBut l
+    | Everywhere_but l -> AllOccurrencesBut l
     | Nowhere -> NoOccurrences
+    | _ -> assert false
 
   (** {3 Clauses} *)
 
-  type hypothesis_selector = Tac2types.hyp_location_flag * Id.t
-
-  let hyp h = InHyp, h
-  let type_of h = InHypTypeOnly, h
-  let value_of h = InHypValueOnly, h
+  type hypothesis_selector = .. (** See [Tac2types.hyp_location_flag]. *)
+  type hypothesis_selector +=
+     | Hyp of Id.t
+     | Type_of of Id.t
+     | Value_of of Id.t
 
   type clause = Tac2types.clause
 
   let ( |- ) (hyps: (hypothesis_selector * int occurrences) occurrences) (goal: int occurrences) =
     match hyps with
     | Everywhere ->
-       { onhyps = None; concl_occs = make_occurrences goal }
+       { onhyps = None; concl_occs = mk_occurrences goal }
     | Nowhere ->
-       { onhyps = Some []; concl_occs = make_occurrences goal }
+       { onhyps = Some []; concl_occs = mk_occurrences goal }
     | At hyps ->
-       let f ((flag, hyp), occs) = (hyp, make_occurrences occs, flag) in
+       let f (hyp_selector, occs) =
+         let flag, hyp =
+           match hyp_selector with
+           | Hyp h -> Tac2types.InHyp, h
+           | Type_of h -> Tac2types.InHypTypeOnly, h
+           | Value_of h -> Tac2types.InHypValueOnly, h
+           | _ -> assert false
+         in
+         (hyp, mk_occurrences occs, flag)
+       in
        let hyps = List.map f hyps in
-       { onhyps = Some hyps; concl_occs = make_occurrences goal }
+       { onhyps = Some hyps; concl_occs = mk_occurrences goal }
+    | _ -> assert false
 
   (** {3 Move locations} *)
 
-  type move_location = Id.t Logic.move_location
+  type move_location = .. (* Extensible version of [Id.t Logic.move_location] *)
+  type move_location +=
+     | At_top
+     | At_bottom
+     | Before of Id.t
+     | After of Id.t
 
-  let top = Logic.MoveFirst
-  let bottom = Logic.MoveLast
-  let before (id: Id.t) = Logic.MoveBefore id
-  let after (id: Id.t) = Logic.MoveAfter id
+  let mk_move_location = function
+    | At_top -> Logic.MoveFirst
+    | At_bottom -> Logic.MoveLast
+    | Before h -> Logic.MoveBefore h
+    | After h -> Logic.MoveAfter h
+    | _ -> assert false
 
   (** {3 Inversion} *)
 
-  type inversion_kind = Inv.inversion_kind
+  type inversion_kind = .. (** Extensible version of [Inv.inversion_kind] *)
+  type inversion_kind +=
+     | Simple
+     | Full
+     | Full_clear
 
-  let simple: inversion_kind = SimpleInversion
-  let full: inversion_kind = FullInversion
-  let full_clear: inversion_kind = FullInversionClear
+  let mk_inversion_kind = function
+    | Simple -> Inv.SimpleInversion
+    | Full -> Inv.FullInversion
+    | Full_clear -> Inv.FullInversionClear
+    | _ -> assert false
 
   (** {3 Rewriting} *)
 
-  type multiplicity = Equality.multi
+  type multiplicity = .. (** Extensible version of [Equality.multi] *)
+  type multiplicity +=
+     | Exactly of int
+     | At_most of int
+     | Star
+     | Plus
 
-  let exactly n = Equality.Precisely n
-  let at_most n = Equality.UpTo n
-  let star = Equality.RepeatStar
-  let plus = Equality.RepeatPlus
+  let mk_multiplicity = function
+    | Exactly n -> Equality.Precisely n
+    | At_most n -> Equality.UpTo n
+    | Star -> Equality.RepeatStar
+    | Plus -> Equality.RepeatPlus
+    | _ -> assert false
 
   type rewriting = Tac2types.rewriting
 
-  let rewriting ?orient ?(n = exactly 1) ?(bindings = no_bindings) c =
-    Option.map ((=) (-->)) orient, n, return (c, bindings)
+  let rewriting ?orient ?(n = Exactly 1) ?(bindings = No_bindings) c =
+    Option.map ((=) (-->)) orient, mk_multiplicity n, return (with_bindings ~bindings c)
 
   (** {3 Induction clauses}
 
@@ -1131,14 +1171,16 @@ module Syntax = struct
         Reference manual, "Case analysis"
    *)
 
-  type induction_arg = Tac2types.destruction_arg
+  type induction_arg = .. (** Extensible version of [Tac2types.destruction_arg]. *)
+  type induction_arg +=
+     | On_constr of constr_with_bindings
+     | On_hyp of hypothesis
 
-  let on_constr ?(bindings = no_bindings) t =
-    ElimOnConstr (return (t, bindings))
-
-  let on_hyp = function
-    | NamedHyp h -> ElimOnIdent h.CAst.v
-    | AnonHyp n -> ElimOnAnonHyp n
+  let mk_induction_arg = function
+    | On_constr c -> ElimOnConstr (return c)
+    | On_hyp (Named_hyp h) -> ElimOnIdent h
+    | On_hyp (Nth_hyp n) -> ElimOnAnonHyp n
+    | _ -> assert false
 
   type induction_clause = Tac2types.induction_clause
 
@@ -1155,7 +1197,7 @@ module Syntax = struct
       | Some _ -> assert false (* By static type *)
       | None -> None
     in
-    on, eqn, as_pattern, where
+    mk_induction_arg on, eqn, as_pattern, where
 end
 
 (** {2 Standard tactics} *)
@@ -1163,8 +1205,8 @@ end
 module Ltac2Std = struct
   type reference = GlobRef.t
 
-  let intro ?name ?(where = Logic.MoveLast) () =
-    Tactics.intro_move name where
+  let intro ?name ?(where = Syntax.At_bottom) () =
+    Tactics.intro_move name (Syntax.mk_move_location where)
 
   let intros ?(e = false) ?(patterns = []) () = Tac2tactics.intros_patterns e patterns
 
@@ -1177,7 +1219,7 @@ module Ltac2Std = struct
   let case ?(e = false) c = Tac2tactics.general_case_analysis e c
 
   let generalize l =
-    let l = List.map (fun (c, occs, name) -> (c, Syntax.make_occurrences occs, name)) l in
+    let l = List.map (fun (c, occs, name) -> (c, Syntax.mk_occurrences occs, name)) l in
     Tac2tactics.generalize l
 
   let assert_ ?as_pattern ?by c =
@@ -1245,7 +1287,7 @@ module Ltac2Std = struct
     type t = Redexpr.red_expr
 
     let make_red_context where =
-      let f (c, occs) = c, Syntax.make_occurrences occs in
+      let f (c, occs) = c, Syntax.mk_occurrences occs in
       Option.map f where
 
     let red = Genredexpr.Red
@@ -1254,9 +1296,9 @@ module Ltac2Std = struct
     let cbv flags = Tac2tactics.cbv (Redops.make_red_flag flags)
     let cbn flags = Tac2tactics.cbn (Redops.make_red_flag flags)
     let lazy_ flags = Tac2tactics.lazy_ (Redops.make_red_flag flags)
-    let unfold l = Tac2tactics.unfold (List.map (fun (r, o) -> r, Syntax.make_occurrences o) l)
+    let unfold l = Tac2tactics.unfold (List.map (fun (r, o) -> r, Syntax.mk_occurrences o) l)
     let fold cs = Genredexpr.Fold cs
-    let pattern l = Tac2tactics.pattern (List.map (fun (c, o) -> c, Syntax.make_occurrences o) l)
+    let pattern l = Tac2tactics.pattern (List.map (fun (c, o) -> c, Syntax.mk_occurrences o) l)
 
     let vm ?where () = Tac2tactics.vm (make_red_context where)
     let native ?where () = Tac2tactics.native (make_red_context where)
@@ -1303,15 +1345,17 @@ module Ltac2Std = struct
     Tac2tactics.rewrite e rewrites where by
 
   let setoid_rewrite ?(orient = Syntax.(-->)) ?in_hyp t where =
-    let where = Syntax.make_occurrences where in
+    let where = Syntax.mk_occurrences where in
     Tac2tactics.setoid_rewrite (orient = Syntax.(-->)) (return t) where in_hyp
 
-  let inversion ?(kind = Inv.FullInversion) ?as_pattern ?in_hyps arg =
+  let inversion ?(kind = Syntax.Full) ?as_pattern ?in_hyps arg =
+    let kind = Syntax.mk_inversion_kind kind in
+    let arg = Syntax.mk_induction_arg arg in
     Tac2tactics.inversion kind arg as_pattern in_hyps
 
   let reflexivity = Tactics.intros_reflexivity
 
-  let move = Tactics.move_hyp
+  let move x move_loc = Tactics.move_hyp x (Syntax.mk_move_location move_loc)
 
   let specialize ?as_pattern t = Tac2tactics.specialize t as_pattern
 
@@ -1323,23 +1367,23 @@ module Ltac2Std = struct
 
   let cut = Tactics.cut
 
-  let left ?(e = false) ?(bindings = Syntax.no_bindings) () = Tac2tactics.left_with_bindings e bindings
-  let right ?(e = false) ?(bindings = Syntax.no_bindings) () = Tac2tactics.right_with_bindings e bindings
+  let left ?(e = false) ?(bindings = Syntax.No_bindings) () = Tac2tactics.left_with_bindings e (Syntax.mk_bindings bindings)
+  let right ?(e = false) ?(bindings = Syntax.No_bindings) () = Tac2tactics.right_with_bindings e (Syntax.mk_bindings bindings)
 
-  let intros_until = Tactics.intros_until
+  let intros_until h = Tactics.intros_until (Syntax.mk_hypothesis h)
 
   let exact_no_check = Tactics.exact_no_check
   let vm_cast_no_check = Tactics.vm_cast_no_check
   let native_cast_no_check = Tactics.native_cast_no_check
 
-  let constructor ?(e = false) ?n ?(bindings = Syntax.no_bindings) () =
+  let constructor ?(e = false) ?n ?(bindings = Syntax.No_bindings) () =
     match n with
-    | Some n -> Tac2tactics.constructor_tac e None n bindings
+    | Some n -> Tac2tactics.constructor_tac e None n (Syntax.mk_bindings bindings)
     | None -> Tactics.any_constructor e None
 
   let symmetry ?(where = default_on_conclusion) () = Tac2tactics.symmetry where
 
-  let split ?(e = false) ?(bindings = Syntax.no_bindings) () = Tac2tactics.split_with_bindings e bindings
+  let split ?(e = false) ?(bindings = Syntax.No_bindings) () = Tac2tactics.split_with_bindings e (Syntax.mk_bindings bindings)
   let rename = Tactics.rename_hyp
 
   let revert = Generalize.revert
@@ -1357,8 +1401,10 @@ module Ltac2Std = struct
   let keep = Tactics.keep
   let clearbody = Tactics.clear_body
 
-  let discriminate ?(e = false) ?arg () = Tac2tactics.discriminate e arg
-  let injection ?(e = false) ?arg ?as_patterns () = Tac2tactics.injection e as_patterns arg
+  let discriminate ?(e = false) ?arg () =
+    Tac2tactics.discriminate e (Option.map Syntax.mk_induction_arg arg)
+  let injection ?(e = false) ?arg ?as_patterns () =
+    Tac2tactics.injection e as_patterns (Option.map Syntax.mk_induction_arg arg)
 
   let absurd = Contradiction.absurd
   let contradiction ?witness () = Tac2tactics.contradiction witness

@@ -1148,14 +1148,12 @@ end
 module Syntax : sig
   (** {3 Hypotheses} *)
 
-  type hypothesis
+  type hypothesis = private ..
   (** Type of hypothesis target. *)
 
-  val named_hyp : ident -> hypothesis
-  (** [named_hyp h] selects hypothesis [h]. *)
-
-  val nth_hyp : int -> hypothesis
-  (** [nth_hyp n] selects the [n]-th hypothesis. *)
+  type hypothesis +=
+     | Named_hyp of ident (** [Named_hyp h] selects hypothesis [h]. *)
+     | Nth_hyp of int     (** [Nth_hyp n] selects the [n]-th hypothesis. *)
 
   (** {3 Bindings}
 
@@ -1163,21 +1161,22 @@ module Syntax : sig
         Reference manual, "Bindings"
    *)
 
-  type bindings
+  type bindings = private ..
   (** Type of term bindings. *)
+
+  type bindings +=
+     | No_bindings
+     (** An empty list of bindings. *)
+
+     | Implicit of constr list
+     (** [Implicit [t₁; …; tₙ]] binds free variables in left-to-right order of
+         their first appearance in the relevant term. *)
+
+     | Explicit of (hypothesis * constr) list
+     (** [Explicit [(h₁, t₁); …; (hₙ, tₙ)]] binds variables [hᵢ] to [tᵢ]. *)
 
   type constr_with_bindings
   (** A term with {!type:bindings}. *)
-
-  val no_bindings : bindings
-  (** [no_bindings] is an empty list of bindings. *)
-
-  val implicitly : constr list -> bindings
-  (** [implicitly [t₁; …; tₙ]] binds free variables in left-to-right order of their
-      first appearance in the relevant term. *)
-
-  val explicitly : (hypothesis * constr) list -> bindings
-  (** [explicitly [(h₁, t₁); …; (hₙ, tₙ)]] binds variables [hᵢ] to [tᵢ]. *)
 
   val with_bindings : ?bindings:bindings -> constr -> constr_with_bindings
   (** [with_bindings t ?bindings] adds [bindings] to [t]. *)
@@ -1276,37 +1275,34 @@ module Syntax : sig
 
   (** {3 Occurrences} *)
 
-  type 'a occurrences
+  type _ occurrences = private ..
   (** An occurrence is a subterm of a goal or hypothesis that matches a
       pattern. *)
 
-  val at : 'a list -> 'a occurrences
-  (** [at l] selects the specified occurrences. *)
+  type _ occurrences +=
+     | At : 'a list -> 'a occurrences
+     (** [At l] selects the specified occurrences. *)
 
-  val everywhere : 'a occurrences
-  (** [everywhere] selects every occurrence (similar to Ltac's [*]). *)
+     | Everywhere : 'a occurrences
+     (** [Everywhere] selects every occurrence (similar to Ltac's [*]). *)
 
-  val everywhere_but : int list -> int occurrences
-  (** [everywhere_but l] selects every occurrence that is not in [l] (similar to
-      Ltac's [at -l]). *)
+     | Everywhere_but : int list -> int occurrences
+     (** [Everywhere_but l] selects every occurrence that is not in [l] (similar
+         to Ltac's [at -l]). *)
 
-  val nowhere : 'a occurrences
-  (** [nowhere] selects no occurrence. *)
+     | Nowhere : 'a occurrences
+     (** [Nowhere] selects no occurrence. *)
 
   (** {3 Clauses} *)
 
-  type hypothesis_selector
+  type hypothesis_selector = private ..
   (** Selects whether an occurrence should apply to the type or value of the
       hypothesis. *)
 
-  val hyp : ident -> hypothesis_selector
-  (** Selects the whole hypothesis. *)
-
-  val type_of : ident -> hypothesis_selector
-  (** Selects the type part of the hypothesis. *)
-
-  val value_of : ident -> hypothesis_selector
-  (** Selects the value part of the hypothesis. *)
+  type hypothesis_selector +=
+     | Hyp of ident      (** Applies to the whole hypothesis. *)
+     | Type_of of ident  (** Selects the type part of the hypothesis. *)
+     | Value_of of ident (** Selects the value part of the hypothesis. *)
 
   type clause
   (** A clause selects a subset of occurrences in the hypothesis and the goal. *)
@@ -1319,59 +1315,43 @@ module Syntax : sig
       according to [hyps_occs], and occurrences in the goal according to [goal_occs].
 
       Examples:
-       - [everywhere |- everywhere] corresponds to [* |- *].
-       - [nowhere |- everywhere] corresponds to [|- *].
-       - [nowhere |- nowhere] corresponds to [|-].
-       - [at [(type_of h, everywhere)] |- (at [1; 2])] corresponds to [(type of h) |- * at 1 2].
+       - [Everywhere |- Everywhere] corresponds to [* |- *].
+       - [Nowhere |- Everywhere] corresponds to [|- *].
+       - [Nowhere |- Nowhere] corresponds to [|-].
+       - [At [(Type_of h, Everywhere)] |- (At [1; 2])] corresponds to [(type of h) |- * at 1 2].
    *)
 
   (** {3 Move locations} *)
 
-  type move_location
+  type move_location = private ..
   (** Specifies where to move a hypothesis for the {!val:Std.move} tactic. *)
 
-  val top : move_location
-  (** [at top]. *)
-
-  val bottom : move_location
-  (** [at bottom]. *)
-
-  val before : ident -> move_location
-  (** [before H]. *)
-
-  val after : ident -> move_location
-  (** [after H]. *)
+  type move_location +=
+     | At_top          (** [at top] *)
+     | At_bottom       (** [at bottom] *)
+     | Before of ident (** [before h] *)
+     | After of ident  (** [after h] *)
 
   (** {3 Inversion kinds} *)
 
-  type inversion_kind
+  type inversion_kind = private ..
   (** Type of inversion performed. *)
 
-  val simple : inversion_kind
-  (** Behave like Ltac's [simple inversion]. *)
-
-  val full : inversion_kind
-  (** Behave like Ltac's [inversion]. *)
-
-  val full_clear : inversion_kind
-  (** Behave like Ltac's [inversion_clear]. *)
+  type inversion_kind +=
+     | Simple     (** Behave like Ltac's [simple inversion]. *)
+     | Full       (** Behave like Ltac's [inversion]. *)
+     | Full_clear (** Behave like Ltac's [inversion_clear]. *)
 
   (** {3 Rewrites} *)
 
-  type multiplicity
+  type multiplicity = private ..
   (** Specifies the number of rewrites to perform. *)
 
-  val exactly : int -> multiplicity
-  (** [exactly n] performs a rewrite exactly [n] times. *)
-
-  val at_most : int -> multiplicity
-  (** [at_most n] performs a rewrite at most [n] times ([?n] in Ltac). *)
-
-  val star : multiplicity
-  (** [star] performs a rewrite as many times as possible, possibly zero. *)
-
-  val plus : multiplicity
-  (** [plus] performs a rewrite as many times as possible and at least once. *)
+  type multiplicity +=
+     | Exactly of int (** [Exactly n] performs a rewrite exactly [n] times. *)
+     | At_most of int (** [At_most n] performs a rewrite at most [n] times ([?n] in Ltac). *)
+     | Star           (** [Star] performs a rewrite as many times as possible, possibly zero. *)
+     | Plus           (** [Plus] performs a rewrite as many times as possible and at least once. *)
 
   type rewriting
   (** Types of rewriting for the {!val:Std.rewrite} tactic. *)
@@ -1388,10 +1368,10 @@ module Syntax : sig
         If equal to [(-->)], rewrites [term₁] into [term₂].
         If equal to [(<--)], rewrites [term₂] into [term₁].
 
-      @param n (default = [exactly 1])
+      @param n (default = [Exactly 1])
         Number of rewrites to perform.
 
-      @param bindings (default = [no_bindings])
+      @param bindings (default = [No_bindings])
         Bindings to use.
    *)
 
@@ -1401,15 +1381,13 @@ module Syntax : sig
         Reference manual, "Case analysis"
    *)
 
-  type induction_arg
+  type induction_arg = private ..
   (** @see <https://rocq-prover.org/doc/master/refman/proofs/writing-proofs/reasoning-inductives.html#grammar-token-induction_arg>
         Reference manual, induction_arg *)
 
-  val on_constr : ?bindings:bindings -> constr -> induction_arg
-  (** [on_constr t ?bindings] performs induction/case analysis on [t]. *)
-
-  val on_hyp : hypothesis -> induction_arg
-  (** [on_hyp h] performs induction/case analysis on hypothesis [h]. *)
+  type induction_arg +=
+     | On_constr of constr_with_bindings (** [On_constr t] performs induction/case analysis on [t]. *)
+     | On_hyp of hypothesis              (** [On_hyp h] performs induction/case analysis on hypothesis [h]. *)
 
   type induction_clause
   (** @see <https://rocq-prover.org/doc/master/refman/proofs/writing-proofs/reasoning-inductives.html#grammar-token-induction_clause>
@@ -1500,7 +1478,7 @@ module Std : sig
       of premises.
 
       We recommend explicitly naming items with [intros] instead of using
-      [intros_until (nth_hyp n)].
+      [intros_until (Nth_hyp n)].
 
       @see <https://rocq-prover.org/doc/master/refman/proof-engine/tactics.html#rocq:tacn.intros-until> Reference manual
    *)
