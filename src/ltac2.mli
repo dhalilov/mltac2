@@ -1423,7 +1423,7 @@ module Std : sig
       @see <https://rocq-prover.org/doc/master/refman/proof-engine/tactics.html#rocq:tacn.assumption> Reference manual
    *)
 
-  val apply : ?e:bool -> ?in_hyp_as:(ident * any intropattern option) -> constr_with_bindings list -> unit tactic
+  val apply : ?e:bool -> ?in_hyp_as:(ident * simple intropattern option) -> constr_with_bindings list -> unit tactic
   (** [apply ?e ts ?in_hyp_as] uses unification to match the type of each [t] with the goal
       (to do backward reasoning) or with a hypothesis (to do forward reasoning).
       Specifying multiple {!type:constr_with_bindings} is equivalent to giving each one
@@ -1572,7 +1572,7 @@ module Std : sig
 
   (** {3 Controlling the proof flow} *)
 
-  val assert_ : ?as_pattern:any intropattern -> ?by:unit tactic -> constr -> unit tactic
+  val assert_ : ?as_pattern:simple intropattern -> ?by:unit tactic -> constr -> unit tactic
   (** [assert_ assertion] adds a new hypothesis to the current subgoal and a new subgoal
       before it to prove the hypothesis.
 
@@ -1582,7 +1582,7 @@ module Std : sig
       @see <https://rocq-prover.org/doc/master/refman/proof-engine/tactics.html#rocq:tacn.assert> Reference manual
    *)
 
-  val enough : ?as_pattern:any intropattern -> ?by:unit tactic -> constr -> unit tactic
+  val enough : ?as_pattern:simple intropattern -> ?by:unit tactic -> constr -> unit tactic
   (** [enough t ?as_pattern ?by] adds a new hypothesis to the current subgoal and a new subgoal
       after it to prove the hypothesis.
 
@@ -1598,7 +1598,7 @@ module Std : sig
 
       @see <https://rocq-prover.org/doc/master/refman/proof-engine/tactics.html#rocq:tacn.cut> Reference manual *)
 
-  val specialize : ?as_pattern:any intropattern -> constr_with_bindings -> unit tactic
+  val specialize : ?as_pattern:simple intropattern -> constr_with_bindings -> unit tactic
   (** [specialize t ?as_pattern] specializes [t] (typically a hypothesis or
       lemma) by applying arguments to it.
 
@@ -2065,7 +2065,7 @@ module Std : sig
 
       @see <https://rocq-prover.org/doc/master/refman/proofs/writing-proofs/reasoning-inductives.html#rocq:tacn.discriminate> Reference manual *)
 
-  val injection : ?e:bool -> ?arg:induction_arg -> ?as_patterns:any intropattern list -> unit -> unit tactic
+  val injection : ?e:bool -> ?arg:induction_arg -> ?as_patterns:simple intropattern list -> unit -> unit tactic
   (** [injection () ?e ?ipat ?arg] exploits the property that constructors of
       inductive types are injective, i.e. that if [c] is a constructor of an inductive
       type and [c t1 = c t2] then [t1 = t2] are equal too.
@@ -2086,7 +2086,7 @@ module Std : sig
 
   val inversion :
     ?kind:inversion_kind ->
-    ?as_pattern:any intropattern ->
+    ?as_pattern:or_and intropattern ->
     ?in_hyps:ident list ->
     induction_arg ->
     unit tactic
