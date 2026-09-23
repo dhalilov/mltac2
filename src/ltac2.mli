@@ -1451,7 +1451,7 @@ module Std : sig
         already in use, Rocq will consider using [H0], [H1], etc., until it finds a
         fresh name.
 
-      @param where (default = [at `bottom])
+      @param where (default = [At_bottom])
         Indicates where to place the introduced hypothesis: at the top or bottom
         of the context or before or after another specified hypothesis.
 
