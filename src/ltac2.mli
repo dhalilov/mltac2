@@ -2038,8 +2038,8 @@ module Unification : sig
       used for conversion. *)
 
   val conv : Environ.env -> Evd.evar_map -> conv_flag -> TransparentState.t -> constr -> constr -> Evd.evar_map option
-  (** [conv env sigma flag ts c1 c2] returns [true] if both [c1] and [c2] are
-      convertible, in which case it returns the updated environment with the universes
+  (** [conv env sigma flag ts c1 c2] returns [Some env] if both [c1] and [c2] are
+      convertible, in which case [env] is the updated environment with the universes
       constraints required for the terms to be convertible. It returns [None] if the
       terms are not convertible.
 
