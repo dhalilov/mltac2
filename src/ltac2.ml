@@ -1056,21 +1056,21 @@ module Syntax = struct
 
   (** {3 Occurrences} *)
 
-  type 'a occurrences =
-    | At of 'a list
-    | Everywhere
-    | EverywhereBut of ('a, int) Type.eq * int list
-    | Nowhere
+  type _ occurrences =
+    | At : 'a list -> 'a occurrences
+    | Everywhere : 'a occurrences
+    | EverywhereBut : int list -> int occurrences
+    | Nowhere : 'a occurrences
 
   let at l = At l
   let everywhere = Everywhere
-  let everywhere_but (l: int list) = EverywhereBut (Type.Equal, l)
+  let everywhere_but l = EverywhereBut l
   let nowhere = Nowhere
 
   let make_occurrences = function
     | At l -> OnlyOccurrences l
     | Everywhere -> AllOccurrences
-    | EverywhereBut (_, l) -> AllOccurrencesBut l
+    | EverywhereBut l -> AllOccurrencesBut l
     | Nowhere -> NoOccurrences
 
   (** {3 Clauses} *)
@@ -1093,8 +1093,6 @@ module Syntax = struct
        let f ((flag, hyp), occs) = (hyp, make_occurrences occs, flag) in
        let hyps = List.map f hyps in
        { onhyps = Some hyps; concl_occs = make_occurrences goal }
-    | EverywhereBut _ ->
-       . (* refuted by the type equality *)
 
   (** {3 Move locations} *)
 
