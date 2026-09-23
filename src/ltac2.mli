@@ -742,8 +742,8 @@ end
 
 module Pattern : sig
   type context = Constr_matching.context
-  (** A context is a constr with a hole, where the constr represents the surrounding
-      context. *)
+  (** A context is a {!type:constr} with a hole that can be instantiated
+      through the {!val:instantiate} function. *)
 
   val empty_context : context
   (** A trivial context only made of the hole. *)
