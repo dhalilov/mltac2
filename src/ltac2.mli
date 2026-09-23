@@ -620,7 +620,7 @@ module Message : sig
       line adding [i] to the current indentation. *)
 
   val space : message
-  (** Breaking space. Equivalent to break 1 0. *)
+  (** Breaking space. Equivalent to [break 1 0]. *)
 
   val hbox : message -> message
   (** Horizontal box. Break hints in a horizontal box never split the line
