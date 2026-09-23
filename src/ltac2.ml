@@ -1164,8 +1164,8 @@ module Syntax = struct
 
   type rewriting = Tac2types.rewriting
 
-  let rewriting ?orient ?(n = Exactly 1) ?(bindings = No_bindings) c =
-    Option.map ((=) (-->)) orient, mk_multiplicity n, return (bind c ~with_:bindings)
+  let rewriting ?orient ?(n = Exactly 1) ?(with_ = No_bindings) c =
+    Option.map ((=) (-->)) orient, mk_multiplicity n, return (bind c ~with_)
 
   (** {3 Induction clauses}
 
@@ -1367,8 +1367,8 @@ module Ltac2Std = struct
 
   let cut = Tactics.cut
 
-  let left ?(e = false) ?(bindings = Syntax.No_bindings) () = Tac2tactics.left_with_bindings e (Syntax.mk_bindings bindings)
-  let right ?(e = false) ?(bindings = Syntax.No_bindings) () = Tac2tactics.right_with_bindings e (Syntax.mk_bindings bindings)
+  let left ?(e = false) ?(with_ = Syntax.No_bindings) () = Tac2tactics.left_with_bindings e (Syntax.mk_bindings with_)
+  let right ?(e = false) ?(with_ = Syntax.No_bindings) () = Tac2tactics.right_with_bindings e (Syntax.mk_bindings with_)
 
   let intros_until h = Tactics.intros_until (Syntax.mk_hypothesis h)
 
@@ -1376,14 +1376,14 @@ module Ltac2Std = struct
   let vm_cast_no_check = Tactics.vm_cast_no_check
   let native_cast_no_check = Tactics.native_cast_no_check
 
-  let constructor ?(e = false) ?n ?(bindings = Syntax.No_bindings) () =
+  let constructor ?(e = false) ?n ?(with_ = Syntax.No_bindings) () =
     match n with
-    | Some n -> Tac2tactics.constructor_tac e None n (Syntax.mk_bindings bindings)
+    | Some n -> Tac2tactics.constructor_tac e None n (Syntax.mk_bindings with_)
     | None -> Tactics.any_constructor e None
 
   let symmetry ?(where = default_on_conclusion) () = Tac2tactics.symmetry where
 
-  let split ?(e = false) ?(bindings = Syntax.No_bindings) () = Tac2tactics.split_with_bindings e (Syntax.mk_bindings bindings)
+  let split ?(e = false) ?(with_ = Syntax.No_bindings) () = Tac2tactics.split_with_bindings e (Syntax.mk_bindings with_)
   let rename = Tactics.rename_hyp
 
   let revert = Generalize.revert

@@ -1357,8 +1357,8 @@ module Syntax : sig
   type rewriting
   (** Types of rewriting for the {!val:Std.rewrite} tactic. *)
 
-  val rewriting : ?orient:orientation intropattern -> ?n:multiplicity -> ?bindings:bindings -> constr -> rewriting
-  (** [rewriting ?orient e ?n ?bindings] rewrites using equality or equivalence
+  val rewriting : ?orient:orientation intropattern -> ?n:multiplicity -> ?with_:bindings -> constr -> rewriting
+  (** [rewriting ?orient e ?n ?with_] rewrites using equality or equivalence
       [e].
 
       @param e
@@ -1372,7 +1372,7 @@ module Syntax : sig
       @param n (default = [Exactly 1])
         Number of rewrites to perform.
 
-      @param bindings (default = [No_bindings])
+      @param with_ (default = [No_bindings])
         Bindings to use.
    *)
 
@@ -1933,8 +1933,8 @@ module Std : sig
 
   (** {4 Applying constructors} *)
 
-  val constructor : ?e:bool -> ?n:int -> ?bindings:bindings -> unit -> unit tactic
-  (** [constructor ?e ?n ?bindings ()] applies the [n]-th constructor, if
+  val constructor : ?e:bool -> ?n:int -> ?with_:bindings -> unit -> unit tactic
+  (** [constructor ?e ?n ?with_ ()] applies the [n]-th constructor, if
       specified, or the first matching constructor to prove the current
       goal. Fails if no constructor applies.
 
@@ -1944,8 +1944,8 @@ module Std : sig
 
       @see <https://rocq-prover.org/doc/master/refman/proofs/writing-proofs/reasoning-inductives.html#rocq:tacn.constructor> Reference manual *)
 
-  val split : ?e:bool -> ?bindings:bindings -> unit -> unit tactic
-  (** [split ?e ?bindings ()] proves a conjunction [A /\ B] or an iff [A <-> B]
+  val split : ?e:bool -> ?with_:bindings -> unit -> unit tactic
+  (** [split ?e ?with_ ()] proves a conjunction [A /\ B] or an iff [A <-> B]
       by splitting it into subgoals. For conjunction, the left conjunct
       becomes the first subgoal. Any bindings are applied to the constructor.
 
@@ -1955,8 +1955,8 @@ module Std : sig
 
       @see <https://rocq-prover.org/doc/master/refman/proofs/writing-proofs/reasoning-inductives.html#applying-constructors> Reference manual *)
 
-  val left : ?e:bool -> ?bindings:bindings -> unit -> unit tactic
-  (** [left ?e ?bindings ()] proves a disjunctive goal [A \/ B] by selecting the
+  val left : ?e:bool -> ?with_:bindings -> unit -> unit tactic
+  (** [left ?e ?with_ ()] proves a disjunctive goal [A \/ B] by selecting the
       left disjunct [A], generating a subgoal for [A]. Any bindings are
       applied to the constructor.
 
@@ -1966,8 +1966,8 @@ module Std : sig
 
       @see <https://rocq-prover.org/doc/master/refman/proofs/writing-proofs/reasoning-inductives.html#applying-constructors> Reference manual *)
 
-  val right : ?e:bool -> ?bindings:bindings -> unit -> unit tactic
-  (** [right ?e ?bindings ()] proves a disjunctive goal [A \/ B] by selecting the
+  val right : ?e:bool -> ?with_:bindings -> unit -> unit tactic
+  (** [right ?e ?with_ ()] proves a disjunctive goal [A \/ B] by selecting the
       right disjunct [B], generating a subgoal for [B]. Any bindings are
       applied to the constructor.
 
