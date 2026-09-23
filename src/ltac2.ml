@@ -1208,7 +1208,7 @@ module Ltac2Std = struct
   let intro ?name ?(where = Syntax.At_bottom) () =
     Tactics.intro_move name (Syntax.mk_move_location where)
 
-  let intros ?(e = false) ?(patterns = []) () = Tac2tactics.intros_patterns e patterns
+  let intros ?(e = false) patterns = Tac2tactics.intros_patterns e patterns
 
   let apply ?(e = false) ?in_hyp_as bindings =
     let bindings = List.map (thunk Tac2extffi.constr_with_bindings) bindings in

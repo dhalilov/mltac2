@@ -1457,9 +1457,9 @@ module Std : sig
 
       @see <https://rocq-prover.org/doc/master/refman/proof-engine/tactics.html#rocq:tacn.intro> Reference manual *)
 
-  val intros : ?e:bool -> ?patterns:any intropattern list -> unit -> unit tactic
-  (** [intros ?e ?patterns ()] introduces a list of new variables in the context
-      using the [patterns]. If [patterns] is not specified, the tactic
+  val intros : ?e:bool -> any intropattern list -> unit tactic
+  (** [intros ?e patterns] introduces a list of new variables in the context
+      using the [patterns]. If [patterns] is empty, the tactic
       introduces items until it reaches the head constant; it never fails and
       may leave the context unchanged.
 
