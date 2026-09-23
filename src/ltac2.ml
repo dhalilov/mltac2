@@ -11,6 +11,8 @@ open Proofview.Notations
 
 let return = Proofview.tclUNIT
 
+type reference = GlobRef.t
+
 [%%if rocq >= (9, 1)]
 let to_fun1 _ _ (f : 'a -> 'b) : ('a, 'b) Tac2ffi.fun1 =
   fun x -> return (f x)
@@ -1203,8 +1205,6 @@ end
 (** {2 Standard tactics} *)
 
 module Ltac2Std = struct
-  type reference = GlobRef.t
-
   let intro ?name ?(where = Syntax.At_bottom) () =
     Tactics.intro_move name (Syntax.mk_move_location where)
 
@@ -1462,6 +1462,7 @@ end
 (** {1 Ltac2 API} *)
 
 (** Built-in types *)
+
 type ident = Id.t
 type evar = Evar.t
 type cast = Constr.cast_kind

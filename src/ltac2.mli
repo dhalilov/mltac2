@@ -21,6 +21,7 @@ type constr = EConstr.t
 type preterm = Ltac_pretype.closed_glob_constr
 type binder = Name.t EConstr.binder_annot * EConstr.types
 type message = Pp.t
+type reference = GlobRef.t
 type err = Exninfo.iexn
 type iexn = Exninfo.iexn
 type exninfo = Exninfo.info
@@ -408,19 +409,19 @@ end
 (** {2 Environment} *)
 
 module Env : sig
-  val get : Libnames.full_path -> (GlobRef.t, unit) result
+  val get : Libnames.full_path -> (reference, unit) result
   (** [get path] returns the global reference corresponding to the absolute name
       given as argument, or [Error ()] if it does not exist. *)
 
-  val path : GlobRef.t -> (Libnames.full_path, unit) result
+  val path : reference -> (Libnames.full_path, unit) result
   (** [path ref] returns the absolute name of the given reference, or [Error ()]
       if the reference does not exist. *)
 
-  val expand : Libnames.qualid -> GlobRef.t list
+  val expand : Libnames.qualid -> reference list
   (** [expand qualid] returns the list of all global references whose absolute
       name contains the argument list as a suffix.  *)
 
-  val instantiate : Environ.env -> Evd.evar_map -> GlobRef.t -> Evd.evar_map * constr
+  val instantiate : Environ.env -> Evd.evar_map -> reference -> Evd.evar_map * constr
   (** [instantiate env sigma ref] returns a fresh instance of the corresponding
       reference, in particular generating fresh universe variables and constraints
       when this reference is universe-polymorphic. *)
@@ -694,7 +695,7 @@ module Module : sig
 
       @since 9.2 *)
 
-  val module_of_reference : GlobRef.t -> t
+  val module_of_reference : reference -> t
   (** [module_of_reference ref] returns the module of the reference.
 
       @raise Invalid_argument if [ref] is a [VarRef].
@@ -719,7 +720,7 @@ module Module : sig
         May be extended in the future. *)
 
     type t +=
-       | Ref of GlobRef.t
+       | Ref of reference
        (** A reference in the module. *)
 
        | Submodule of ModPath.t
@@ -989,7 +990,7 @@ module Scheme : sig
 
       @since 9.3 *)
 
-  val lookup : kind -> GlobRef.t -> GlobRef.t option
+  val lookup : kind -> reference -> reference option
   (** [lookup kind ref] looks up the scheme registered under [kind] for the
       reference [ref]. Returns [None] if [ref] is not an inductive type or if no such
       scheme is registered.
@@ -1406,8 +1407,6 @@ end
 
 module Std : sig
   open Syntax
-
-  type reference = GlobRef.t
 
   (** {3 Applying theorems} *)
 
@@ -2348,7 +2347,7 @@ module TransparentState : sig
      | Level of int (** Corresponds to integer level [n] (where [Level 0] is
                         transparent). *)
 
-  val with_strategy : strategy_level -> GlobRef.t list -> 'a tactic -> 'a tactic
+  val with_strategy : strategy_level -> reference list -> 'a tactic -> 'a tactic
   (** [with_strategy lvl refs tac] temporarily sets the strategy level of all
       references in [refs] to [lvl], executes [tac], and then restores the
       original strategy levels. This is the Ltac2 analogue of the
