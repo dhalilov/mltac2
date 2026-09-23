@@ -697,7 +697,7 @@ module Module : sig
   val module_of_reference : GlobRef.t -> t
   (** [module_of_reference ref] returns the module of the reference.
 
-      Throws if [ref] is a [VarRef].
+      @raise Invalid_argument if [ref] is a [VarRef].
 
       @since 9.2 *)
 
