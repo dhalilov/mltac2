@@ -1179,8 +1179,8 @@ module Syntax : sig
   type constr_with_bindings
   (** A term with {!type:bindings}. *)
 
-  val with_bindings : ?bindings:bindings -> constr -> constr_with_bindings
-  (** [with_bindings t ?bindings] adds [bindings] to [t]. *)
+  val bind : ?with_:bindings -> constr -> constr_with_bindings
+  (** [bind t ?with_] adds bindings [with_] to [t]. *)
 
   (** {3 Intropatterns} *)
 

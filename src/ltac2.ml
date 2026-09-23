@@ -1020,8 +1020,8 @@ module Syntax = struct
 
   type constr_with_bindings = Tac2types.constr_with_bindings
 
-  let with_bindings ?(bindings = No_bindings) c =
-    c, mk_bindings bindings
+  let bind ?(with_ = No_bindings) c =
+    c, mk_bindings with_
 
   (** {3 Intropatterns} *)
 
@@ -1165,7 +1165,7 @@ module Syntax = struct
   type rewriting = Tac2types.rewriting
 
   let rewriting ?orient ?(n = Exactly 1) ?(bindings = No_bindings) c =
-    Option.map ((=) (-->)) orient, mk_multiplicity n, return (with_bindings ~bindings c)
+    Option.map ((=) (-->)) orient, mk_multiplicity n, return (bind c ~with_:bindings)
 
   (** {3 Induction clauses}
 
