@@ -1110,9 +1110,9 @@ module Scheme : sig
       @since 9.3 *)
 
   val eq_dec : kind
-(** Decidable equality scheme.
+  (** Decidable equality scheme.
 
-    @since 9.3 *)
+      @since 9.3 *)
 end
 [%%endif]
 
