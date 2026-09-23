@@ -620,7 +620,7 @@ module Message : sig
       line adding [i] to the current indentation. *)
 
   val space : message
-  (** Breaking space. Equivalent to break 1 0. *)
+  (** Breaking space. Equivalent to [break 1 0]. *)
 
   val hbox : message -> message
   (** Horizontal box. Break hints in a horizontal box never split the line
@@ -697,7 +697,7 @@ module Module : sig
   val module_of_reference : GlobRef.t -> t
   (** [module_of_reference ref] returns the module of the reference.
 
-      Throws if [ref] is a [VarRef].
+      @raise Invalid_argument if [ref] is a [VarRef].
 
       @since 9.2 *)
 
@@ -742,8 +742,8 @@ end
 
 module Pattern : sig
   type context = Constr_matching.context
-  (** A context is a constr with a hole, where the constr represents the surrounding
-      context. *)
+  (** A context is a {!type:constr} with a hole that can be instantiated
+      through the {!val:instantiate} function. *)
 
   val empty_context : context
   (** A trivial context only made of the hole. *)
@@ -1110,9 +1110,9 @@ module Scheme : sig
       @since 9.3 *)
 
   val eq_dec : kind
-(** Decidable equality scheme.
+  (** Decidable equality scheme.
 
-    @since 9.3 *)
+      @since 9.3 *)
 end
 [%%endif]
 
@@ -2034,12 +2034,12 @@ end
 
 module Unification : sig
   type conv_flag = Evd.conv_pb
-  (** Controls if cumulativity [Prop <= Set <= Type 1 <= … <= Type i <= …] is
+  (** Controls if cumulativity [Prop ≤ Set ≤ Type 1 ≤ … ≤ Type i ≤ …] is
       used for conversion. *)
 
   val conv : Environ.env -> Evd.evar_map -> conv_flag -> TransparentState.t -> constr -> constr -> Evd.evar_map option
-  (** [conv env sigma flag ts c1 c2] returns [true] if both [c1] and [c2] are
-      convertible, in which case it returns the updated environment with the universes
+  (** [conv env sigma flag ts c1 c2] returns [Some env] if both [c1] and [c2] are
+      convertible, in which case [env] is the updated environment with the universes
       constraints required for the terms to be convertible. It returns [None] if the
       terms are not convertible.
 
