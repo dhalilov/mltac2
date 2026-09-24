@@ -12,31 +12,31 @@ open Std
 
 (** [apply t] *)
 let test_apply t =
-  apply [bind t]
+  apply [term t]
 
 (** [apply t1, t2] *)
 let test_apply2 t1 t2 =
-  apply [bind t1; bind t2]
+  apply [term t1; term t2]
 
 (** [apply t with x] *)
 let test_apply_with t x =
-  apply [bind t ~with_:(Implicit [x])]
+  apply [{ t with bindings = Implicit [x]}]
 
 (** [apply t with (1 := x)] *)
 let test_apply_with_one t x =
-  apply [bind t ~with_:(Explicit [Nth_hyp 1, x])]
+  apply [{ t with bindings = Explicit [Nth_hyp 1, x]}]
 
 (** [apply t with (x := y)] *)
 let test_apply_with_name t x y =
-  apply [bind t ~with_:(Explicit [Named_hyp x, y])]
+  apply [{ t with bindings = Explicit [Named_hyp x, y]}]
 
 (** [apply t in h] *)
 let test_apply_in t h =
-  apply [bind t] ~in_hyp_as:(h, None)
+  apply [term t] ~in_hyp_as:(h, None)
 
 (** [apply t in h as _] *)
 let test_apply_in_as t h =
-  apply [bind t] ~in_hyp_as:(h, Some __)
+  apply [term t] ~in_hyp_as:(h, Some __)
 
 (** {1 [intro]} *)
 

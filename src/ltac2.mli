@@ -1176,11 +1176,14 @@ module Syntax : sig
      | Explicit of (hypothesis * constr) list
      (** [Explicit [(h₁, t₁); …; (hₙ, tₙ)]] binds variables [hᵢ] to [tᵢ]. *)
 
-  type constr_with_bindings
+  type constr_with_bindings = { t: constr; bindings: bindings }
   (** A term with {!type:bindings}. *)
 
-  val bind : ?with_:bindings -> constr -> constr_with_bindings
-  (** [bind t ?with_] adds bindings [with_] to [t]. *)
+  val term : constr -> constr_with_bindings
+  (** [term t] adds default bindings to [t].
+
+      Expected usage: [{ (term t) with bindings = … }].
+   *)
 
   (** {3 Intropatterns} *)
 

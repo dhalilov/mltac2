@@ -1018,10 +1018,12 @@ module Syntax = struct
     | Explicit l -> Tac2types.ExplicitBindings (List.map (fun (h, c) -> mk_hypothesis h, c) l)
     | _ -> assert false
 
-  type constr_with_bindings = Tac2types.constr_with_bindings
+  type constr_with_bindings = { t: EConstr.t; bindings: bindings }
 
-  let bind ?(with_ = No_bindings) c =
-    c, mk_bindings with_
+  let term t = { t; bindings = No_bindings }
+
+  let mk_constr_with_bindings { t; bindings } =
+    t, mk_bindings bindings
 
   (** {3 Intropatterns} *)
 
@@ -1164,8 +1166,10 @@ module Syntax = struct
 
   type rewriting = Tac2types.rewriting
 
-  let rewriting ?orient ?(n = Exactly 1) ?(with_ = No_bindings) c =
-    Option.map ((=) (-->)) orient, mk_multiplicity n, return (bind c ~with_)
+  let rewriting ?orient ?(n = Exactly 1) ?(with_ = No_bindings) t =
+    Option.map ((=) (-->)) orient,
+    mk_multiplicity n,
+    return (mk_constr_with_bindings { t; bindings = with_ })
 
   (** {3 Induction clauses}
 
@@ -1179,7 +1183,7 @@ module Syntax = struct
      | On_hyp of hypothesis
 
   let mk_induction_arg = function
-    | On_constr c -> ElimOnConstr (return c)
+    | On_constr c -> ElimOnConstr (return (mk_constr_with_bindings c))
     | On_hyp (Named_hyp h) -> ElimOnIdent h
     | On_hyp (Nth_hyp n) -> ElimOnAnonHyp n
     | _ -> assert false
@@ -1210,13 +1214,19 @@ module Ltac2Std = struct
 
   let intros ?(e = false) patterns = Tac2tactics.intros_patterns e patterns
 
-  let apply ?(e = false) ?in_hyp_as bindings =
-    let bindings = List.map (thunk Tac2extffi.constr_with_bindings) bindings in
-    Tac2tactics.apply true e bindings in_hyp_as
+  let apply ?(e = false) ?in_hyp_as terms =
+    let terms = List.map (fun t ->
+                       let t = Syntax.mk_constr_with_bindings t in
+                       thunk Tac2extffi.constr_with_bindings t) terms in
+    Tac2tactics.apply true e terms in_hyp_as
 
-  let elim ?(e = false) ?using c = Tac2tactics.elim e c using
+  let elim ?(e = false) ?using c =
+    let c = Syntax.mk_constr_with_bindings c in
+    let using = Option.map Syntax.mk_constr_with_bindings using in
+    Tac2tactics.elim e c using
 
-  let case ?(e = false) c = Tac2tactics.general_case_analysis e c
+  let case ?(e = false) c =
+    Tac2tactics.general_case_analysis e (Syntax.mk_constr_with_bindings c)
 
   let generalize l =
     let l = List.map (fun (c, occs, name) -> (c, Syntax.mk_occurrences occs, name)) l in
@@ -1250,9 +1260,13 @@ module Ltac2Std = struct
     Proofview.tclEVARMAP >>= fun sigma ->
     Tac2tactics.letin_pat_tac e (Some (true, eqn)) as_name (Some sigma, c) where
 
-  let destruct ?(e = false) ?using is = Tac2tactics.induction_destruct false e is using
+  let destruct ?(e = false) ?using is =
+    let using = Option.map Syntax.mk_constr_with_bindings using in
+    Tac2tactics.induction_destruct false e is using
 
-  let induction ?(e = false) ?using is = Tac2tactics.induction_destruct true e is using
+  let induction ?(e = false) ?using is =
+    let using = Option.map Syntax.mk_constr_with_bindings using in
+    Tac2tactics.induction_destruct true e is using
 
   let exfalso = Tactics.exfalso
 
@@ -1346,6 +1360,7 @@ module Ltac2Std = struct
 
   let setoid_rewrite ?(orient = Syntax.(-->)) ?in_hyp t where =
     let where = Syntax.mk_occurrences where in
+    let t = Syntax.mk_constr_with_bindings t in
     Tac2tactics.setoid_rewrite (orient = Syntax.(-->)) (return t) where in_hyp
 
   let inversion ?(kind = Syntax.Full) ?as_pattern ?in_hyps arg =
@@ -1357,7 +1372,7 @@ module Ltac2Std = struct
 
   let move x move_loc = Tactics.move_hyp x (Syntax.mk_move_location move_loc)
 
-  let specialize ?as_pattern t = Tac2tactics.specialize t as_pattern
+  let specialize ?as_pattern t = Tac2tactics.specialize (Syntax.mk_constr_with_bindings t) as_pattern
 
   let assumption ?(e = false) () =
     if e then Eauto.e_assumption else Tactics.assumption
@@ -1407,7 +1422,7 @@ module Ltac2Std = struct
     Tac2tactics.injection e as_patterns (Option.map Syntax.mk_induction_arg arg)
 
   let absurd = Contradiction.absurd
-  let contradiction ?witness () = Tac2tactics.contradiction witness
+  let contradiction ?witness () = Tac2tactics.contradiction (Option.map Syntax.mk_constr_with_bindings witness)
 
   let autorewrite ~all ?(where = default_on_conclusion) ?using dbs =
     let using = Option.map (thunk' Tac2ffi.unit) using in
