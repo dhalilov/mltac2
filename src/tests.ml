@@ -20,15 +20,15 @@ let test_apply2 t1 t2 =
 
 (** [apply t with x] *)
 let test_apply_with t x =
-  apply [{ t with bindings = Implicit [x]}]
+  apply [{ (term t) with bindings = Implicit [x]}]
 
 (** [apply t with (1 := x)] *)
 let test_apply_with_one t x =
-  apply [{ t with bindings = Explicit [Nth_hyp 1, x]}]
+  apply [{ (term t) with bindings = Explicit [Nth_hyp 1, x]}]
 
 (** [apply t with (x := y)] *)
 let test_apply_with_name t x y =
-  apply [{ t with bindings = Explicit [Named_hyp x, y]}]
+  apply [{ (term t) with bindings = Explicit [Named_hyp x, y]}]
 
 (** [apply t in h] *)
 let test_apply_in t h =
