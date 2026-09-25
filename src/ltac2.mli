@@ -4,7 +4,6 @@
     and the reference manual. *)
 
 open Names
-open Ltac2_plugin
 open Proofview
 
 (** {1 Built-in types} *)
