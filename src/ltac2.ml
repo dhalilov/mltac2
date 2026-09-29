@@ -156,7 +156,7 @@ module Ltac2Constr = struct
     let closenl sigma ids k c =
       EConstr.Vars.substn_vars sigma k ids c
 
-    let closednl sigma n c =
+    let closedn sigma n c =
       EConstr.Vars.closedn sigma n c
 
     let noccur_between sigma n m c =
@@ -245,7 +245,7 @@ module Ltac2Constr = struct
         }
       [%%endif]
 
-      let set_use_coercion b (flags: t) =
+      let set_use_coercions b (flags: t) =
         { flags with use_coercions = b }
 
       let set_use_typeclasses b flags =
