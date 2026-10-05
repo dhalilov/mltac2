@@ -50,7 +50,7 @@ module Constr : sig
   type t = constr
 
   val type_ : Environ.env -> Evd.evar_map -> t -> Evd.evar_map * t
-  (** [type_ env sigma t ] returns the type of [t] in the given environment
+  (** [type_ env sigma t] returns the type of [t] in the given environment
       and evar map, along with the updated evar map. *)
 
   val equal : Evd.evar_map -> t -> t -> bool
@@ -182,25 +182,25 @@ module Constr : sig
       val set_use_coercions : bool -> t -> t
       (** Sets use of coercions during pretyping.
 
-          [true] in [constr_flags]. *)
+          [true] in {!val:constr_flags}. *)
 
       val set_use_typeclasses : bool -> t -> t
       (** Sets whether to run typeclass inference at the end of pretyping and
           when needed according to the "Typeclass Resolution For Conversion"
           flag.
 
-          [true] in [constr_flags]. *)
+          [true] in {!val:constr_flags}. *)
 
       val set_allow_evars : bool -> t -> t
       (** Sets whether to allow pretyping to produce new unresolved evars.
 
-          [false] in [constr_flags]. *)
+          [false] in {!val:constr_flags}. *)
 
       val set_nf_evars : bool -> t -> t
       (** Sets whether to evar-normalize the result of pretyping. This should
           not impact anything other than performance.
 
-          [true] in [constr_flags]. *)
+          [true] in {!val:constr_flags}. *)
     end
 
     val expected_istype : expected_type
@@ -233,11 +233,11 @@ module Constructor : sig
 
   val inductive : t -> inductive
   (** [inductive constructor] returns the inductive to which [constructor]
-      belongs.  *)
+      belongs. *)
 
   val index : t -> int
   (** [index constructor] returns the index of the given constructor (such that
-      [c] is [Ind.get_constructor (Ind.data (inductive c)) (index c))]). *)
+      [c] is [Ind.get_constructor (Ind.data (inductive c)) (index c)]). *)
 
   val print : t -> message
   (** [print constructor] prints the constructor using the shortest qualified
@@ -271,12 +271,12 @@ module Control : sig
   (** [case] is the most general primitive to control backtracking:
 
       - If [t] would fail with [e], [case t] returns [Fail e].
-      - If [t] would succeed and evaluate to [v] then [case t] returns [Next (v, h)],
+      - If [t] would succeed and evaluate to [v], then [case t] returns [Next (v, h)],
         where [h] is the continuation to execute in case of subsequent
         failure. Calling [h] resets the backtrackable state to its value when
-        case was called.
+        [case] was called.
 
-        [case] reifies a backtracking computation into an inspectable value, it
+        [case] reifies a backtracking computation into an inspectable value; it
         allows the programmer to make explicit the effects which are normally
         implicit (i.e., they do not appear in the type system). *)
 
@@ -294,7 +294,7 @@ module Control : sig
       number of focused goals. *)
 
   val extend : unit tactic list -> unit tactic -> unit tactic list -> unit tactic
-  (** [extend] is a more flexible variant of dispatch, where the second argument
+  (** [extend] is a more flexible variant of {!val:dispatch}, where the second argument
       tactic is "repeated" enough times such that every goal has a tactic
       assigned to it. [extend b e r] applies the tactics in [b] to the first
       [length b] goals, the tactics in [r] to the last [length r] goals, and [e]
@@ -309,17 +309,17 @@ module Control : sig
   val focus : int -> int -> 'a tactic -> 'a tactic
   (** [focus i j t] focuses a proofview on the goals from index [i] to index
       [j] (inclusive, goals are indexed from 1) and runs [t] with those goals under
-      focus, i.e. goals number [i] to [j] become the only focused goals during the
+      focus, i.e., goals number [i] to [j] become the only focused goals during the
       execution of [t]. When focus returns, the present focus is restored.
 
       If the range [i]–[j] is invalid, fails with a backtrackable "no such goal" error. *)
 
   val shelve : unit tactic
   (** Shelve all goals under focus. The goals are placed on the shelf for later
-      use, or to be solved by side-effects. *)
+      use, or to be solved by side effects. *)
 
   val shelve_unifiable : unit tactic
-  (** Shelves the unifiable goals under focus, i.e. the goals which appear in
+  (** Shelves the unifiable goals under focus, i.e., the goals which appear in
       other goals under focus (the unfocused goals are not considered). *)
 
   val unshelve : 'a tactic -> 'a tactic
@@ -329,7 +329,7 @@ module Control : sig
 
   val new_goal : evar -> unit tactic
   (** Adds the given evar to the list of goals as the last one. If it is already
-      defined in the current state, don't do anything.
+      defined in the current state, does nothing.
 
       Panics if the evar is not in the current state. *)
 
@@ -338,11 +338,11 @@ module Control : sig
       goal [i] after executing the tactic was goal [nth l (i-1)] before
       executing the tactic.
 
-      Raises if [l] is not a permutation of ints from [1] to [numgoals]. *)
+      Raises if [l] is not a permutation of ints from [1] to {!val:numgoals}. *)
 
   val cycle : int -> unit tactic
-  (** If [n] is positive, [cycle n] puts the [n] first goal last. If [n] is
-      negative, then it puts the [n] last goals first. *)
+  (** If [n] is positive, [cycle n] puts the first [n] goals last. If [n] is
+      negative, then it puts the last [n] goals first. *)
 
   val progress : 'a tactic -> 'a tactic
   (** [progress t] checks the state of the proof after [t]. If it is identical
@@ -364,7 +364,7 @@ module Control : sig
 
   val hyp_value : Environ.env -> variable -> constr option
   (** [hyp_value env id] looks for the hypothesis or section variable with the
-      given name in [env] and return its value ([v] in [H := v]) if there is
+      given name in [env] and returns its value ([v] in [H := v]) if there is
       one.
 
       @raise Not_found If the hypothesis could not be found in the environment.
@@ -386,7 +386,7 @@ module Control : sig
 
   val with_holes : 'a tactic -> ('a -> 'b tactic) -> 'b tactic
   (** [with_holes t f] evaluates [t], then applies [f] to the result, and fails
-      if all evars generated by [t] have not been solved when [f] returns. *)
+      if some evar generated by [t] has not been solved when [f] returns. *)
 
   (** {3 Timing} *)
 
@@ -416,7 +416,7 @@ end
 module Env : sig
   val get : Libnames.full_path -> reference
   (** [get path] returns the global reference corresponding to the absolute name
-      given as argument
+      given as argument.
 
       @raise Not_found If the path does not correspond to a reference. *)
 
@@ -427,7 +427,7 @@ module Env : sig
 
   val expand : Libnames.qualid -> reference list
   (** [expand qualid] returns the list of all global references whose absolute
-      name contains the argument list as a suffix.  *)
+      name contains the argument list as a suffix. *)
 
   val instantiate : Environ.env -> Evd.evar_map -> reference -> Evd.evar_map * constr
   (** [instantiate env sigma ref] returns a fresh instance of the corresponding
@@ -466,7 +466,7 @@ module Fresh : sig
   val next : Free.t -> ident -> ident * Free.t
   (** [next free id] generates a fresh identifier with the given base name which
       is not a member of [free], and returns the updated set. More efficient
-      than composing [fresh] and [Free.add]. *)
+      than composing {!val:fresh} and {!val:Free.add}. *)
 
   [%%endif]
 end
@@ -508,7 +508,7 @@ module Ind : sig
 
   val repr : data -> t
   (** [repr data] returns the name of the inductive type corresponding to the
-      block. Inverse of [data]. *)
+      block. Inverse of {!val:data}. *)
 
   val index : t -> int
   (** [index ind] returns the index of the inductive type inside its mutual
@@ -525,8 +525,8 @@ module Ind : sig
 
   val get_block : data -> int -> data option
   (** [get_block data n] is the block corresponding to the [n]th inductive type
-      in data's parent mutually inductive type. Index must range between [0] and
-      [nblocks data - 1], otherwise the function returns [None]. *)
+      in [data]'s parent mutually inductive type. Index must range between [0]
+      and [nblocks data - 1], otherwise the function returns [None]. *)
 
   val get_constructor : data -> int -> constructor option
   (** [get_constructor data n] returns the [n]th constructor of the inductive
@@ -611,7 +611,7 @@ module Message : sig
   [%%endif]
 
   val concat : message -> message -> message
-  (** [concat m1 m2] concats two messages. *)
+  (** [concat m1 m2] concatenates two messages. *)
 
   (** {3 Boxing primitives}
 
@@ -620,7 +620,7 @@ module Message : sig
   val force_new_line : message
   (** [force_new_line] forces writing on a new line after this.
 
-      Warning: partially reinitialises the pretty-printing engine, potentially
+      Warning: partially reinitializes the pretty-printing engine, potentially
       leading to bad printing afterwards. Prefer using a break hint inside a
       vertical box. *)
 
@@ -644,7 +644,7 @@ module Message : sig
       single line, otherwise behaves as a vertical box (using the given int). *)
 
   val hovbox : int -> message -> message
-  (** Horizonal-or-vertical box. Prints as much as possible on each line,
+  (** Horizontal-or-vertical box. Prints as much as possible on each line,
       splitting the line at break hints when there is no more room on the line
       (see "Printing Width" option). The int is added to the indentation when
       splitting the line. *)
@@ -687,7 +687,7 @@ module Module : sig
       @since 9.2 *)
 
   val is_library : t -> bool
-  (** [is_library m] returns [true] for modules which are libraries (i.e. files).
+  (** [is_library m] returns [true] for modules which are libraries (i.e., files).
 
       @since 9.2 *)
 
@@ -757,7 +757,7 @@ module Pattern : sig
   val empty_context : context
   (** A trivial context only made of the hole. *)
 
-  type substitution = EConstr.t Id.Map.t
+  type substitution = constr Id.Map.t
   (** A substitution is a mapping from pattern variables to terms. *)
 
   val matches : Environ.env -> Evd.evar_map -> pattern -> constr -> substitution option
@@ -767,11 +767,11 @@ module Pattern : sig
 
   val matches_subterm : pattern -> constr -> (context * substitution) tactic
   (** [matches_subterm pattern t] returns a stream of results corresponding to
-      all of the subterms of [t] that matches [pattern] as in [matches], in the
+      all of the subterms of [t] that match [pattern] as in {!val:matches}, in the
       current goal. The stream is encoded as a backtracking value whose last
       exception is [Constr_matching.PatternMatchingFailure]. The additional
-      value compared to [matches] is the context of the match, to be filled with
-      the [instantiate] function. *)
+      value compared to {!val:matches} is the context of the match, to be filled with
+      the {!val:instantiate} function. *)
 
   type match_pattern = private ..
   (** Patterns used in goal-matching. *)
@@ -805,9 +805,10 @@ module Pattern : sig
   (** Given a list of patterns [hpats] for hypotheses and one pattern [cpat] for
       the conclusion, [matches_goal ?reverse hpats cpat] produces (a stream of):
 
-      - A list, with one element per pattern in [hpats], containing the name of the
-        matched hypothesis, the context of the body pattern (or [None] if the
-        body pattern was [MatchPattern]), and the context of the hypothesis pattern.
+      - A list, with one element per pattern in [hpats], containing the name of
+        the matched hypothesis, the context of the body pattern (or [None] if
+        the body pattern was {!constructor:match_pattern.Pattern}), and the
+        context of the hypothesis pattern.
       - A context corresponding to the conclusion.
       - A substitution from pattern variables to terms.
 
@@ -836,8 +837,7 @@ module Proj : sig
   (** [ind proj] returns the inductive to which the projection belongs. *)
 
   val index : t -> int
-  (** [index proj] returns the index of the projection indicates which field it
-      projects. *)
+  (** [index proj] returns the index of the field that [proj] projects. *)
 
   val unfolded : t -> bool
   (** [unfolded proj] returns the unfolding boolean. *)
@@ -858,7 +858,7 @@ module Proj : sig
   val print : t -> message
   (** [print proj] prints the projection using the shortest qualified identifier
       which refers to it. Does not avoid variable names in the current or global
-      environment.  *)
+      environment. *)
 end
 
 (** {2 Rewriting} *)
@@ -866,7 +866,7 @@ end
 [%%if rocq >= (9, 1)]
 module Rewrite : sig
 
-  (** Module for rewrite strategies used by [rewrite_strat]. *)
+  (** Module for rewrite strategies used by {!val:Rewrite.rewrite_strat}. *)
   module Strategy : sig
     type t = Rewrite.strategy
 
@@ -898,8 +898,8 @@ module Rewrite : sig
     (** [try_ t] is equivalent to [choice t id]. *)
 
     val fix : (t -> t) -> t
-    (** Fixed point operation for recursive strategies. [fix (fun f => s)]
-        evaluates to [s [f / fix (fun f => s)]]. The function provided in the
+    (** Fixed point operation for recursive strategies. [fix (fun f -> s)]
+        evaluates to [s [f / fix (fun f -> s)]]. The function provided in the
         argument is executed only once when the strategy is constructed — it
         cannot be used to dynamically manage the rewriting. *)
 
@@ -914,7 +914,8 @@ module Rewrite : sig
         term on which progress can be made. *)
 
     val all_subterms : t -> t
-    (** Applies the argument to all immediate subterms of the considered term, left-to-right.  *)
+    (** Applies the argument to all immediate subterms of the considered term,
+        left-to-right. *)
 
     val bottomup : t -> t
     (** Traverses the term bottom-up, left-to-right and applies the argument at
@@ -929,21 +930,21 @@ module Rewrite : sig
         progress. *)
 
     val outermost : t -> t
-    (** Traverses the term top-down--left-to-right until the argument makes
+    (** Traverses the term top-down, left-to-right until the argument makes
         progress. *)
 
     val hints : ident -> t
-    (** Applies hints from rewrite hint database. *)
+    (** Applies hints from the rewrite hint database. *)
 
     val old_hints : ident -> t
 
     val one_lemma : preterm -> ltr:bool -> t
-    (** Unifies the one side of the lemma with the current subterm and on
-        success rewrite it to the other side. If [ltr] is true,
+    (** Unifies one side of the lemma with the current subterm and on
+        success rewrites it to the other side. If [ltr] is true,
         rewrites left-to-right; otherwise, rewrites right-to-left. *)
 
     val lemmas : preterm list -> t
-    (** Equivalent to [choices (List.map (fun c => one_lemma c true)) l]. *)
+    (** [lemmas l] is equivalent to [choices (List.map (fun c -> one_lemma c ~ltr:true) l)]. *)
 
     val fold : constr -> t
     (** Replaces the term under consideration with the argument if they unify. *)
@@ -963,16 +964,16 @@ module Rewrite : sig
         optional relation constraint [rel] is given.
 
         The tactic is applied to a single goal of type [unit] whose context
-        corresponds to the context of the term to rewrite (i.e. the context of
-        the goal at the start of the [rewrite_strat] call extended with the
+        corresponds to the context of the term to rewrite (i.e., the context of
+        the goal at the start of the {!val:Rewrite.rewrite_strat} call extended with the
         binders that were traversed to attain this subterm). The tactic should
         return a [Rewrite.Result.t] indicating success, failure or no progress and
-        should *not* solve the goal. Solving the goal is an error that aborts
-        the [rewrite_strat] call. The success record contains the chosen relation
-        [rel], new right hand-side [rhs] and a proof [prf] of [rel t rhs].
+        should {e not} solve the goal. Solving the goal is an error that aborts
+        the {!val:Rewrite.rewrite_strat} call. The success record contains the chosen relation
+        [rel], new right-hand side [rhs] and a proof [prf] of [rel t rhs].
 
         If the proof [prf] is syntactically [eq_refl _], then the witness of the rewriting
-        is simply a *conversion* requiring no explicit proof and no congruence lemmas
+        is simply a {e conversion} requiring no explicit proof and no congruence lemmas
         for the context of the rewrite.
 
         @since 9.3 *)
@@ -981,8 +982,8 @@ module Rewrite : sig
   end
 
   val rewrite_strat : ?in_hyp:ident -> Strategy.t -> unit tactic
-  (** Runs rewrite strategy on the type of a hypothesis or the goal if the
-      [in_hyp] is [None].
+  (** Runs rewrite strategy on the type of a hypothesis or the goal if [in_hyp]
+      is [None].
 
       @since 9.1 *)
 end
@@ -1075,7 +1076,6 @@ module Scheme : sig
   (** Dependent case analysis scheme for SProp.
 
       @since 9.3 *)
-
 
   val scase_nodep : kind
   (** Non-dependent case analysis scheme for SProp.
@@ -1205,7 +1205,7 @@ module Syntax : sig
    *)
 
   type naming = [ `Naming ]
-  (** Tag for intropatterns used for naming hypotheses (e.g. in [eqn:]
+  (** Tag for intropatterns used for naming hypotheses (e.g., in [eqn:]
       clauses). *)
 
   type or_and = [ `Or_and ]
@@ -1213,7 +1213,7 @@ module Syntax : sig
       in [as] clauses. *)
 
   type orientation = [ `Orientation ]
-  (** Tag for intropatterns that are used as rewrite orientations (i.e. [(-->)] and [(<--)]). *)
+  (** Tag for intropatterns that are used as rewrite orientations (i.e., [(-->)] and [(<--)]). *)
 
   type equality = [ orientation | `Equality ]
   (** Tag for equality intropatterns. *)
@@ -1250,19 +1250,22 @@ module Syntax : sig
   (** [and_pattern [p₁; …; pₙ]] is equivalent to [p₁ & … & pₙ]. *)
 
   val or_pattern : any intropattern list list -> [> or_and] intropattern
-  (** [or_pattern [p₁; …; pₙ]] splits a hypothesis of the form [A₁ \/ … \/ Aₙ]
-      into [n] subgoals, where the [i]-th subgoal will have [pᵢ: Aᵢ]. *)
+  (** [or_pattern [[p₁₁; …; p₁ₘ]; …; [pₙ₁; …; pₙₖ]]] destructs a hypothesis whose
+      inductive type has [n] constructors (e.g., [A₁ ∨ … ∨ Aₙ]) into [n] subgoals.
+      In the [i]-th subgoal, the arguments of the [i]-th constructor are named by
+      the patterns of the [i]-th inner list. Corresponds to [[p₁₁ … p₁ₘ | … | pₙ₁ … pₙₖ]]
+      in Ltac. *)
 
   (** {4 Equality patterns}
 
       These patterns can be used when the hypothesis is an equality. *)
 
   val ( --> ) : [> orientation] intropattern
-  (** Replaces the RHS of the hypothesis with the LHS in the conclusion of the
+  (** Replaces the LHS of the hypothesis with the RHS in the conclusion of the
       goal. *)
 
   val ( <-- ) : [> orientation] intropattern
-  (** Replaces the LHS of the hypothesis with the RHS in the conclusion of the
+  (** Replaces the RHS of the hypothesis with the LHS in the conclusion of the
       goal. *)
 
   val ( @= ) : any intropattern list -> [> equality] intropattern
@@ -1351,9 +1354,9 @@ module Syntax : sig
   (** Type of inversion performed. *)
 
   type inversion_kind +=
-     | Simple     (** Behave like Ltac's [simple inversion]. *)
-     | Full       (** Behave like Ltac's [inversion]. *)
-     | Full_clear (** Behave like Ltac's [inversion_clear]. *)
+     | Simple     (** Behaves like Ltac's [simple inversion]. *)
+     | Full       (** Behaves like Ltac's [inversion]. *)
+     | Full_clear (** Behaves like Ltac's [inversion_clear]. *)
 
   (** {3 Rewrites} *)
 
@@ -1367,7 +1370,7 @@ module Syntax : sig
      | Plus           (** [Plus] performs a rewrite as many times as possible and at least once. *)
 
   type oriented_rewriter
-  (** Types of rewriting for the {!val:Std.rewrite} tactic. *)
+  (** Type of rewriters for the {!val:Std.rewrite} tactic. *)
 
   val ( ==> ) : ?n:multiplicity -> ?with_:bindings -> constr -> oriented_rewriter
   (** [(==>) ?n e ?with_] rewrites using equality or equivalence [e], of the form
@@ -1377,7 +1380,7 @@ module Syntax : sig
       @param n (default = [Exactly 1])
         Number of rewrites to perform.
 
-      @param with_ (default = [No_bindings])
+      @param with_ (default = {!constructor:bindings.No_bindings})
         Bindings to use.
    *)
 
@@ -1389,7 +1392,7 @@ module Syntax : sig
       @param n (default = [Exactly 1])
         Number of rewrites to perform.
 
-      @param with_ (default = [No_bindings])
+      @param with_ (default = {!constructor:bindings.No_bindings})
         Bindings to use.
    *)
 
@@ -1484,7 +1487,7 @@ module Std : sig
         already in use, Rocq will consider using [H0], [H1], etc., until it finds a
         fresh name.
 
-      @param where (default = [At_bottom])
+      @param where (default = {!constructor:move_location.At_bottom})
         Indicates where to place the introduced hypothesis: at the top or bottom
         of the context or before or after another specified hypothesis.
 
@@ -1505,11 +1508,11 @@ module Std : sig
    *)
 
   val intros_until : hypothesis -> unit tactic
-  (** [intros_until nat_or_hyp] repeats [intro] until it has introduced a
+  (** [intros_until nat_or_hyp] repeats {!val:intro} until it has introduced a
       dependent premise with the given name, or has introduced the given number
       of premises.
 
-      We recommend explicitly naming items with [intros] instead of using
+      We recommend explicitly naming items with {!val:intros} instead of using
       [intros_until (Nth_hyp n)].
 
       @see <https://rocq-prover.org/doc/master/refman/proof-engine/tactics.html#rocq:tacn.intros-until> Reference manual
@@ -1534,7 +1537,7 @@ module Std : sig
       current goal. "Unneeded" means that the unselected hypotheses and the goal
       don't refer directly or indirectly to the erased hypotheses. That means the
       hypotheses will no longer appear in the context and therefore can't be used in
-      subsequent proof steps. Note that erasing an uneeded hypothesis may turn a
+      subsequent proof steps. Note that erasing an unneeded hypothesis may turn a
       goal that was provable into an unprovable goal.
 
       @see <https://rocq-prover.org/doc/master/refman/proof-engine/tactics.html#rocq:tacn.clear> Reference manual
@@ -1564,8 +1567,8 @@ module Std : sig
 
       @param e (default = [false])
         If [e] is [true], generates existential variables for uninstantiated
-        variables instead of failing. In practice, this is relevant only when eset
-        is used as a synonym of [epose], i.e. when the term does not occur in the
+        variables instead of failing. In practice, this is relevant only when [eset]
+        is used as a synonym of [epose], i.e., when the term does not occur in the
         goal.
 
       @see <https://rocq-prover.org/doc/master/refman/proof-engine/tactics.html#rocq:tacn.set> Reference manual
@@ -1581,7 +1584,7 @@ module Std : sig
   (** [remember ?e t ?as_name ?eqn ?where] is similar to [set ?e as_name t ?where]
       but creates a hypothesis using Leibniz equality to remember the relation
       between the introduced variable and the term rather than creating a local
-      definition. If [as_name] is not specified a fresh name is used. Use [eqn]
+      definition. If [as_name] is not specified, a fresh name is used. Use [eqn]
       to name the new equation.
 
       @param e (default = [false])
@@ -1647,9 +1650,9 @@ module Std : sig
    *)
 
   val absurd : constr -> unit tactic
-  (** [absurd P] applies [False] elimination, that is it deduces the current goal
+  (** [absurd P] applies [False] elimination, that is, it deduces the current goal
       from [False], and generates as subgoals [~P] and [P]. It is very useful in
-      proofs by cases, where some cases are impossible. In most cases, [P] or [∼P]
+      proofs by cases, where some cases are impossible. In most cases, [P] or [~P]
       is one of the hypotheses of the local context.
 
       @see <https://rocq-prover.org/doc/master/refman/proof-engine/tactics.html#rocq:tacn.absurd> Reference manual
@@ -1662,10 +1665,10 @@ module Std : sig
       does an {!val:intros}. The tactic then proves the goal if
 
       - The updated context has a pair of hypotheses where one is the negation
-        of the other (e.g. [P] and not [~P]), or
-      - There is a hypothesis with an empty inductive type (e.g. [False]), or
+        of the other (e.g., [P] and [~P]), or
+      - There is a hypothesis with an empty inductive type (e.g., [False]), or
       - There is a hypothesis [~P] where [P] is a singleton inductive type
-        (e.g. [True] or [x=x]) provable by {!val:constructor}.
+        (e.g., [True] or [x=x]) provable by {!val:constructor}.
 
       @param witness (default = [None])
         If [witness] is provided, its type must be a negation, such as [~P], or
@@ -1679,7 +1682,7 @@ module Std : sig
    *)
 
   val exfalso : unit tactic
-  (** Implements the “ex falso quodlibet” logical principle: an elimination of
+  (** Implements the "ex falso quodlibet" logical principle: an elimination of
       [False] is performed on the current goal, and the user is then required to prove
       that [False] is indeed provable in the current context.
 
@@ -1722,7 +1725,7 @@ module Std : sig
   (** {4 Tactics for simple equalities} *)
 
   val reflexivity : unit tactic
-  (** After doing an [intros], if the resulting goal is in the form [t = u] in
+  (** After doing an {!val:intros}, if the resulting goal is in the form [t = u] in
       which [t] and [u] are definitionally equal, the tactic proves the goal (by
       applying [eq_refl]). If not, it fails.
 
@@ -1747,7 +1750,7 @@ module Std : sig
    *)
 
   val etransitivity : unit tactic
-  (** [etransitivity] behaves like [transitivity], using a fresh evar instead of a concrete term.
+  (** [etransitivity] behaves like {!val:transitivity}, using a fresh evar instead of a concrete term.
 
       @see <https://rocq-prover.org/doc/master/refman/proofs/writing-proofs/equality.html#rocq:tacn.etransitivity> Reference manual
    *)
@@ -1832,10 +1835,10 @@ module Std : sig
     (** Does not limit delta unfolding. Equivalent to [except []]. *)
 
     type red_flag
-    (** Type of reduction flag. *)
+    (** A reduction flag. *)
 
     val head : red_flag
-    (** Do only head reduction, without going under binders. *)
+    (** Does only head reduction, without going under binders. *)
 
     val beta : red_flag
     (** Beta-reduction of functional application. *)
@@ -1863,7 +1866,7 @@ module Std : sig
     val all_flags : head:bool -> red_flag list
     (** All reduction flags.
 
-        @param head (bool)
+        @param head
           Whether to perform head reduction or not. *)
 
     type t = Redexpr.red_expr
@@ -1887,7 +1890,7 @@ module Std : sig
         key differences:
 
         - It unfolds constants only if they lead to an [ι]-reduction,
-          i.e. reducing a match or unfolding a fixpoint.
+          i.e., reducing a match or unfolding a fixpoint.
 
         - When reducing a constant unfolding to (co)fixpoints, the tactic uses
           the name of the constant the (co)fixpoint comes from instead of the
@@ -1896,7 +1899,7 @@ module Std : sig
         @see <https://rocq-prover.org/doc/master/refman/proofs/writing-proofs/equality.html#rocq:tacn.simpl> Reference manual *)
 
     val cbv : red_flag list -> t tactic
-    (** [cbv flags] normalize the goal as specified by [flags].
+    (** [cbv flags] normalizes the goal as specified by [flags].
 
         @see <https://rocq-prover.org/doc/master/refman/proofs/writing-proofs/equality.html#rocq:tacn.cbv> Reference manual *)
 
@@ -2013,7 +2016,7 @@ module Std : sig
   (** {4 Case analysis} *)
 
   val destruct : ?e:bool -> ?using:constr_with_bindings -> Induction_clause.t list -> unit tactic
-  (** [destruct clauses ?e ?using] perform case analysis on each clause in
+  (** [destruct clauses ?e ?using] performs case analysis on each clause in
       [clauses], generating a subgoal for each of the constructors of the inductive type.
 
       @param e (default = [false])
@@ -2100,8 +2103,8 @@ module Std : sig
 
   val injection : ?e:bool -> ?arg:Induction_arg.t -> ?as_patterns:simple intropattern list -> unit -> unit tactic
   (** [injection ?e ?as_patterns ?arg ()] exploits the property that constructors of
-      inductive types are injective, i.e. that if [c] is a constructor of an inductive
-      type and [c t1 = c t2] then [t1 = t2] are equal too.
+      inductive types are injective, i.e., that if [c] is a constructor of an inductive
+      type, then [c t1 = c t2] implies [t1 = t2].
 
       @param e (default = [false])
         If [e] is [true], creates existential variables for uninstantiated
@@ -2128,10 +2131,10 @@ module Std : sig
       equations for all constructors of the inductive type of [arg] and
       proves the goal by case analysis.
 
-      @param kind (default = [Syntax.Full])
-        The inversion depth: [Simple] does not clear hypotheses, [Full] clears
-        trivially equal hypotheses, and [Full_clear] additionally clears
-        inverted hypotheses.
+      @param kind (default = {!constructor:Full})
+        The inversion depth: {!constructor:Simple} does not clear hypotheses,
+        {!constructor:Full} clears trivially equal hypotheses, and
+        {!constructor:Full_clear} additionally clears inverted hypotheses.
 
       @param as_pattern (default = [None])
         An intro pattern for naming the generated hypotheses.
@@ -2194,12 +2197,13 @@ module Std : sig
       backtracking, which tries to solve the goal by applying hints from the
       specified databases.
 
-      @param debug (default = [Off])
-        The debug level. [Off] produces no output, [Info] shows which
-        hints were tried, and [Debug] shows detailed proof search.
+      @param debug (default = {!constructor:debug.Off})
+        The debug level. {!constructor:debug.Off} produces no output,
+        {!constructor:debug.Info} shows which hints were tried, and
+        {!constructor:debug.Debug} shows detailed proof search.
 
       @param n (default = [None])
-        The search depth limit. Defaults to 5.
+        The search depth limit.
 
       @param dbs (default = [None])
         A list of hint database names to use. If not provided, the default
@@ -2215,12 +2219,13 @@ module Std : sig
   (** [eauto refs ?debug ?n ?dbs] applies the eauto proof search algorithm,
       which extends auto with unification hints and e-unification.
 
-      @param debug (default = [Off])
-        The debug level. [Off] produces no output, [Info] shows which
-        hints were tried, and [Debug] shows detailed proof search.
+      @param debug (default = {!constructor:debug.Off})
+        The debug level. {!constructor:debug.Off} produces no output,
+        {!constructor:debug.Info} shows which hints were tried, and
+        {!constructor:debug.Debug} shows detailed proof search.
 
       @param n (default = [None])
-        The search depth limit. Defaults to 5.
+        The search depth limit.
 
       @param dbs (default = [None])
         A list of hint database names to use. If not provided, the default
@@ -2269,11 +2274,12 @@ module Std : sig
   val trivial : ?debug:debug -> ?dbs:ident list -> reference list -> unit tactic
   (** [trivial refs ?debug ?dbs] behaves like {!val:auto}, but is not recursive
       and only tries hints with zero cost. Typically used to solve goals for which a
-      lemma is already available in the specified hintbases.
+      lemma is already available in the specified hint databases.
 
-      @param debug (default = [Off])
-        The debug level. [Off] produces no output, [Info] shows which
-        hints were tried, and [Debug] shows detailed proof search.
+      @param debug (default = {!constructor:debug.Off})
+        The debug level. {!constructor:debug.Off} produces no output,
+        {!constructor:debug.Info} shows which hints were tried, and
+        {!constructor:debug.Debug} shows detailed proof search.
 
       @param dbs (default = [None])
         A list of hint database names to use. If not provided, the default
@@ -2289,8 +2295,8 @@ module Std : sig
 
   val resolve_tc : constr -> unit tactic
   (** [resolve_tc c] resolves the existential variables appearing in the constr
-      whose types are typeclasses. Fail if any of them cannot be resolved. Does
-      not focus.
+      whose types are typeclasses. Fails if they cannot be resolved. Does not
+      focus.
 
       @see <https://rocq-prover.org/doc/master/refman/language/extensions/evars.html#typeclasses-eauto> Reference manual *)
 
@@ -2312,7 +2318,7 @@ module TransparentState : sig
   (** [empty] is the empty transparency state (all constants are opaque). *)
 
   val full : t
-  (** [full] is the full transparency state (all constants are transparent).  *)
+  (** [full] is the full transparency state (all constants are transparent). *)
 
   val current : unit -> t tactic
   (** [current ()] gives the transparency state of the goal, which is influenced
@@ -2370,9 +2376,9 @@ module TransparentState : sig
 
   [%%if rocq >= (9, 3)]
   type strategy_level = private ..
-  (** Strategy levels used by [with_strategy].
+  (** Strategy levels used by {!val:with_strategy}.
 
-      @see {!type:Conv_oracle.level} *)
+      See {!type:Conv_oracle.level}. *)
 
   type strategy_level +=
      | Expand       (** Corresponds to the [-oo] level (always unfold). *)
@@ -2407,16 +2413,16 @@ module Unification : sig
      (** Enables cumulativity [Prop ≤ Set ≤ Type 1 ≤ … ≤ Type i ≤ …] for conversion. *)
 
      | Conv
-     (** Do not enable cumulativity [Prop ≤ Set ≤ Type 1 ≤ … ≤ Type i ≤ …] for
+     (** Does not enable cumulativity [Prop ≤ Set ≤ Type 1 ≤ … ≤ Type i ≤ …] for
          conversion. *)
 
   val conv : Environ.env -> Evd.evar_map -> conv_flag -> TransparentState.t -> constr -> constr -> Evd.evar_map option
   (** [conv env sigma flag ts c1 c2] returns [Some sigma] if both [c1] and [c2] are
-      convertible, in which case [sigma] is the updated evar map with the universes
+      convertible, in which case [sigma] is the updated evar map with the universe
       constraints required for the terms to be convertible. It returns [None] if the
       terms are not convertible.
 
-      [conv] is parametrised by:
+      [conv] is parametrized by:
       - [flag] which controls if conversion is done up to cumulativity or not.
       - [ts] which controls which constants get unfolded during conversion. *)
 
